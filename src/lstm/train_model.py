@@ -397,4 +397,3 @@ for symbol in symbols:
     predictions[symbol] = pred_original
     print(f"Predicted original close price for {symbol}: {pred_original}")
 
-# Optionally, you can now work with the `predictions` dictionary.
