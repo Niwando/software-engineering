@@ -670,7 +670,7 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
 
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[500px] w-full">
-          <AreaChart data={compressedData}>
+          <AreaChart data={compressedData} margin={{ top: 20, bottom: 20 }}>
             <defs>
               <linearGradient id="fillValue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={gradientColor} stopOpacity={0.8} />
@@ -688,6 +688,9 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
             />
             <YAxis
               tickFormatter={(value) => `${value} USD`}
+              tick={{
+                style: { whiteSpace: "nowrap" }, // Prevent multi-line wrapping
+              }}
             /><ChartTooltip
               cursor={false}
               content={
