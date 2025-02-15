@@ -3,9 +3,9 @@ import {
   SidebarInset,
   SidebarProvider
 } from "@/src/components/ui/sidebar"
-import { StocksOverview } from "@/src/components/dashboard/stocks-overview"
-import { AreaChartInteractive } from "@/src/components/dashboard/area-chart-interactive"
-import { MainNav } from "@/src/components/dashboard/main-nav"
+import { StocksOverview } from "@/src/components/predictions/stocks-overview"
+import { AreaChartInteractive } from "@/src/components/predictions/area-chart-interactive"
+import { MainNav } from "@/src/components/predictions/main-nav"
 
 // ----------------- RAW DATA GENERATION -----------------
 
@@ -164,26 +164,25 @@ const overviewData = getOverviewData(chartData)
 console.log("Overview Data:", overviewData)
 
 export default function Page() {
+  // Extract unique stock names from chartData
+  const uniqueStocks = Array.from(new Set(chartData.map(item => item.stock)));
+
   return (
     <div>
-      {/*<SidebarProvider
-      style={
-        {
-          "--sidebar-width": "350px",
-        } as React.CSSProperties
-      }
-    >*/}
       <div className="border-b mb-4">
         <div className="flex h-16 items-center px-4">
           <MainNav className="mx-6" />
         </div>
       </div>
-      {/*<AppSidebar />*/}
-      {/*<SidebarInset />*/}
-        <StocksOverview overviewData={overviewData}/>
-        <AreaChartInteractive chartData={chartData}/>
-      {/*</SidebarInset>*/}
-      {/*</SidebarProvider>*/}
+      <StocksOverview overviewData={overviewData}/>
+      {uniqueStocks.map(stock => {
+        const stockData = chartData.filter(item => item.stock === stock);
+        return (
+          <div key={stock} className="mb-8">
+            <AreaChartInteractive chartData={stockData} stockNames={stock} />
+          </div>
+        );
+      })}
     </div>
   )
 }
