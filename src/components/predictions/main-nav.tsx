@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import Image from 'next/image';
 
 export function MainNav({
   className,
@@ -11,7 +12,7 @@ export function MainNav({
       {...props}
     >
 <div className="flex items-center space-x-2">
-      <img
+      <Image
         src="/logo_transparent_small.png"
         alt="Pecunia Logo"
         className="h-4 w-auto"

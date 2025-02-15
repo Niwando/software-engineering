@@ -2,9 +2,7 @@
 
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
+  CardContent
 } from "@/src/components/ui/card"
 import { ArrowBigUp, ArrowBigDown } from "lucide-react"
 

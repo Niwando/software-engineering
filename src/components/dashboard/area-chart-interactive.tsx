@@ -299,21 +299,6 @@ function aggregateDataByDayFirst(data: { date: number; value: number }[]) {
   if (firstValue) ag.push(firstValue)
   return ag
 }
-function aggregateDataByHourLast(data: { date: number; value: number }[]) {
-  const ag: { date: number; value: number }[] = []
-  let currentHour: number | null = null
-  let lastValue: { date: number; value: number } | null = null
-  data.forEach((item) => {
-    const hour = new Date(item.date).getHours()
-    if (currentHour === null || hour !== currentHour) {
-      if (lastValue) ag.push(lastValue)
-      currentHour = hour
-    }
-    lastValue = item
-  })
-  if (lastValue) ag.push(lastValue)
-  return ag
-}
 /** lumps 9:31..10:00 => aggregator=10:00, etc. */
 function aggregateDataHourCustom(data: { date: number; value: number }[]) {
   const bucketMap: Record<number, { date: number; value: number }> = {}
@@ -381,7 +366,7 @@ function generateMonthlyTicks(startTS: number, endTS: number) {
   const ticks: number[] = []
 
   // Move c to the "first-of-month at 9:30" on or after startTS
-  let c = new Date(startTS)
+  const c = new Date(startTS)
   c.setDate(1)
   c.setHours(23, 59, 59, 99)
   if (c.getTime() < startTS) {
