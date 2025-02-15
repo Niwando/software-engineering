@@ -16,6 +16,8 @@ export function MainNav({
         src="/logo_transparent_small.png"
         alt="Pecunia Logo"
         className="h-4 w-auto"
+        width={100} 
+        height={40}
       />
       <Link
         href="/dashboard"
