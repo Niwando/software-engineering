@@ -562,7 +562,11 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
     })
   }
 
-  function finalFormatter(value: number, name: string, props: any) {
+  function finalFormatter(
+    value: number,
+    name: string,
+    props: { payload?: { x?: number } }
+  ) {
     const offsetValue = props?.payload?.x
     if (!aggregatedData.length || offsetValue == null) return `${value}`
     const date = expandTradingOffsetToDate(offsetValue, new Date(aggregatedData[0].date))

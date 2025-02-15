@@ -21,23 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select"
-import { Check, ChevronsUpDown } from "lucide-react"
- 
-import { cn } from "@/lib/utils"
-import { Button } from "@/src/components/ui/button"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/src/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/src/components/ui/popover"
 
 // Define types for chart data
 interface ChartDataItem {
