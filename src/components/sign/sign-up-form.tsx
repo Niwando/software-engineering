@@ -13,13 +13,11 @@ import {
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 
-export function SignUpForm({
-  className,
-  ...props
-}: {
-  className?: string;
-  [key: string]: any;
-}) {
+export interface SignUpFormProps extends React.HTMLAttributes<HTMLDivElement> {
+  // Weitere spezifische Props, falls benötigt
+}
+
+export function SignUpForm({ className, ...props }: SignUpFormProps) {
   const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
 

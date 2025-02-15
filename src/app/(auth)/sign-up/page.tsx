@@ -8,6 +8,8 @@ export default function SignIn() {
         <Image
           src="/dashboard.jpeg"
           alt="Dashboard Background"
+          width={1702}
+          height={989}
           className="absolute top-0 left-0 -z-10 h-full w-full object-cover filter blur-sm"
         />
         <div className="flex w-full max-w-sm flex-col gap-6">
