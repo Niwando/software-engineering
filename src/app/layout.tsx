@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,10 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Pecunia",
   description: "AI trading platform for everyone",
-  keywords: [
-    "nextjs",
-    "react",
-  ],
+  keywords: ["nextjs", "react"],
   authors: [
     {
       name: "Nico Wagner, Tobias Schnarr",
@@ -26,7 +24,7 @@ export const metadata: Metadata = {
     },
   ],
   creator: "Nico Wagner",
-icons: {
+  icons: {
     shortcut: "/favicon.ico",
     other: [
       {
@@ -38,7 +36,7 @@ icons: {
     ],
   },
   manifest: `https://localhost:3000/site.webmanifest`,
-}
+};
 
 export const viewport: Viewport = {
   colorScheme: "dark light",
@@ -46,7 +44,7 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "white" },
     { media: "(prefers-color-scheme: dark)", color: "black" },
   ],
-}
+};
 
 export default function RootLayout({
   children,
@@ -54,11 +52,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider 
+          attribute="class" 
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

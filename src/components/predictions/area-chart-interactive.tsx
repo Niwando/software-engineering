@@ -47,7 +47,8 @@ interface ChartDataItem {
 }
 
 interface AreaChartInteractiveProps {
-  chartData: ChartDataItem[]
+  chartData: ChartDataItem[],
+  stockNames: string
 }
 
 /** If you want 16:00 => next day 9:30 to be offset=60, set this to 60. */
@@ -443,10 +444,10 @@ function generateYearlyTicks(startTS: number, endTS: number) {
 // ---------------------------------------------
 // MAIN CHART COMPONENT
 // ---------------------------------------------
-export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
+export function AreaChartInteractive({ chartData, stockNames }: AreaChartInteractiveProps) {
   const [timeRange, setTimeRange] = React.useState("1d")
   const [open, setOpen] = React.useState(false)
-  const [selectedStock, setSelectedStock] = React.useState("GOOGL")
+  const [selectedStock, setSelectedStock] = React.useState(stockNames)
 
   // 1) Filter
   const filteredData = chartData.filter((item) => {
@@ -497,7 +498,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
   // 3) Decide color
   const firstValue = aggregatedData.length ? aggregatedData[0].value : 0
   const lastValue = aggregatedData.length ? aggregatedData[aggregatedData.length - 1].value : 0
-  const gradientColor = lastValue >= firstValue ? "green" : "red"
+  const gradientColor = "rgb(66, 164, 245)"
 
   // 4) Build compressed data
   let compressedData: { x: number; value: number; realDate: number }[] = []
@@ -647,54 +648,11 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
     <Card className="m-8 mt-0">
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1 text-center sm:text-left">
-          <CardTitle>Stock Analysis</CardTitle>
+          <CardTitle>{stockNames}</CardTitle>
           <CardDescription>
             Fixed monthly/yearly ticks so they land on the actual first trading day
           </CardDescription>
         </div>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-[200px] justify-between"
-            >
-              {selectedStock
-                ? stocks.find((stock) => stock.value === selectedStock)?.label
-                : "Select stock..."}
-              <ChevronsUpDown className="opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
-            <Command>
-              <CommandInput placeholder="Search stock..." />
-              <CommandList>
-                <CommandEmpty>No stock found.</CommandEmpty>
-                <CommandGroup>
-                  {stocks.map((stock) => (
-                    <CommandItem
-                      key={stock.value}
-                      value={stock.value}
-                      onSelect={(currentValue) => {
-                        setSelectedStock(currentValue)
-                        setOpen(false)
-                      }}
-                    >
-                      {stock.label}
-                      <Check
-                        className={cn(
-                          "ml-auto",
-                          selectedStock === stock.value ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto">
             <SelectValue placeholder="Today" />
