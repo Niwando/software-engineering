@@ -649,7 +649,12 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
         <div className="grid flex-1 gap-1 text-center sm:text-left">
           <CardTitle>Stock Analysis</CardTitle>
           <CardDescription>
-            Fixed monthly/yearly ticks so they land on the actual first trading day
+            <div>
+              Overview of the stock’s performance. Select a stock and a time range
+            </div>
+            <div>
+            and hover over the chart for more detailed information.
+            </div>
           </CardDescription>
         </div>
         <Popover open={open} onOpenChange={setOpen}>
@@ -697,10 +702,10 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
         </Popover>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-[160px] rounded-lg sm:ml-auto">
-            <SelectValue placeholder="Today" />
+            <SelectValue placeholder="Last day" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="1d">Today</SelectItem>
+            <SelectItem value="1d">Last day</SelectItem>
             <SelectItem value="5d">Last 5 days</SelectItem>
             <SelectItem value="1m">Last 1 month</SelectItem>
             <SelectItem value="3m">Last 3 months</SelectItem>
@@ -712,7 +717,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
 
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[500px] w-full">
-          <AreaChart data={compressedData}>
+          <AreaChart data={compressedData} margin={{ top: 20, bottom: 20 }}>
             <defs>
               <linearGradient id="fillValue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={gradientColor} stopOpacity={0.8} />
@@ -730,6 +735,9 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
             />
             <YAxis
               tickFormatter={(value) => `${value} USD`}
+              tick={{
+                style: { whiteSpace: "nowrap" }, // Prevent multi-line wrapping
+              }}
             /><ChartTooltip
               cursor={false}
               content={

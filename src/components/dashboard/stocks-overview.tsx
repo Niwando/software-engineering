@@ -39,24 +39,24 @@ export function StocksOverview({ overviewData }: { overviewData: OverviewData })
   // Helper to render a filled arrow icon based on performance.
   const renderArrowIcon = (performance: number) => {
     return performance >= 0 ? (
-      <ArrowBigUp size={20} fill="currentColor" className="inline-block fill-current text-green-500" />
+      <ArrowBigUp size={30} fill="currentColor" className="inline-block fill-current text-green-500" />
     ) : (
-      <ArrowBigDown size={20} fill="currentColor" className="inline-block fill-current text-red-500" />
+      <ArrowBigDown size={30} fill="currentColor" className="inline-block fill-current text-red-500" />
     )
   }
 
   return (
-    <div className="grid grid-cols-3 gap-4 p-8">
-      <Card className="w-full" style={overallCardStyle}>
-        <CardContent>
-          <div className="h-full w-full flex justify-between items-center">
-            <div className="flex flex-col">
+    <div className="grid grid-cols-1 min-[880px]:grid-cols-3 gap-4 p-8">
+        <Card className="w-full" style={overallCardStyle}>
+        <CardContent className="p-4 h-full">
+          <div className="flex items-center w-full h-full">
+            <div className="flex flex-col flex-1">
               <div className="text-2xl font-bold">Market</div>
-              <div className="text-2xl font-bold">{overviewData.overallValue} USD</div>
+              <div className="text-md font-bold">{overviewData.overallValue} USD</div>
             </div>
             <div className="flex items-center text-2xl font-bold">
               {overviewData.overallPerformance}%
-              <span className="ml-2">
+              <span className="ml-2 pb-0.5">
                 {renderArrowIcon(overviewData.overallPerformance)}
               </span>
             </div>
@@ -64,15 +64,15 @@ export function StocksOverview({ overviewData }: { overviewData: OverviewData })
         </CardContent>
       </Card>
       <Card className="w-full" style={bestCardStyle}>
-        <CardContent>
-          <div className="h-full w-full flex justify-between items-center">
-            <div className="flex flex-col">
+        <CardContent className="p-4 h-full">
+          <div className="flex items-center w-full h-full">
+            <div className="flex flex-col flex-1">
               <div className="text-2xl font-bold">{overviewData.bestStock.stock}</div>
-              <div className="text-2xl font-bold">{overviewData.bestStock.value} USD</div>
+              <div className="text-md font-bold">{overviewData.bestStock.value} USD</div>
             </div>
             <div className="flex items-center text-2xl font-bold">
               {overviewData.bestStock.performance}%
-              <span className="ml-2">
+              <span className="ml-2 pb-0.5">
                 {renderArrowIcon(overviewData.bestStock.performance)}
               </span>
             </div>
@@ -80,15 +80,15 @@ export function StocksOverview({ overviewData }: { overviewData: OverviewData })
         </CardContent>
       </Card>
       <Card className="w-full" style={worstCardStyle}>
-        <CardContent>
-          <div className="h-full w-full flex justify-between items-center">
-            <div className="flex flex-col">
+        <CardContent className="p-4 h-full">
+          <div className="flex items-center w-full h-full">
+            <div className="flex flex-col flex-1">
               <div className="text-2xl font-bold">{overviewData.worstStock.stock}</div>
-              <div className="text-2xl font-bold">{overviewData.worstStock.value} USD</div>
+              <div className="text-md font-bold">{overviewData.worstStock.value} USD</div>
             </div>
             <div className="flex items-center text-2xl font-bold">
               {overviewData.worstStock.performance}%
-              <span className="ml-2">
+              <span className="ml-2 pb-0.5">
                 {renderArrowIcon(overviewData.worstStock.performance)}
               </span>
             </div>
