@@ -1,8 +1,3 @@
-import { AppSidebar } from "@/src/components/sidebar/app-sidebar"
-import {
-  SidebarInset,
-  SidebarProvider
-} from "@/src/components/ui/sidebar"
 import { StocksOverview } from "@/src/components/predictions/stocks-overview"
 import { AreaChartInteractive } from "@/src/components/predictions/area-chart-interactive"
 import { MainNav } from "@/src/components/predictions/main-nav"
@@ -16,7 +11,7 @@ function isTradingDay(date: Date) {
 
 function generateData(startDate: string, numDays: number, intervalMinutes: number) {
   const data: { date: number; value: number; stock: string }[] = []
-  let c = new Date(startDate)
+  const c = new Date(startDate)
   for (let i = 0; i < numDays; i++) {
     if (isTradingDay(c)) {
       c.setHours(9, 30, 0, 0)
