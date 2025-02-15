@@ -7,24 +7,24 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card"
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/src/components/ui/chart"
+} from "@/components/ui/chart"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select"
+} from "@/components/ui/select"
 import { Check, ChevronsUpDown } from "lucide-react"
  
 import { cn } from "@/lib/utils"
-import { Button } from "@/src/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -32,12 +32,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/src/components/ui/command"
+} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/src/components/ui/popover"
+} from "@/components/ui/popover"
 
 // Define types for chart data
 interface ChartDataItem {
@@ -461,7 +461,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
     } else if (timeRange === "1y") {
       rangeStartDate.setFullYear(referenceDate.getFullYear() - 1)
     } else if (timeRange === "allTime") {
-      rangeStartDate = new Date(chartData[0].date)
+      rangeStartDate = new Date(chartData[0]!.date)
     }
     rangeStartDate.setHours(9, 30, 0, 0)
     return date >= rangeStartDate

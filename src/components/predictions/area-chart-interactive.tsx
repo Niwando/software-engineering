@@ -7,20 +7,20 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card"
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/src/components/ui/chart"
+} from "@/components/ui/chart"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select"
+} from "@/components/ui/select"
 
 // Define types for chart data
 interface ChartDataItem {
@@ -401,7 +401,7 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
     } else if (timeRange === "1y") {
       rangeStartDate.setFullYear(referenceDate.getFullYear() - 1)
     } else if (timeRange === "allTime") {
-      rangeStartDate = new Date(chartData[0].date)
+      rangeStartDate = new Date(chartData[0]!.date)
     }
     rangeStartDate.setHours(9, 30, 0, 0)
     return date >= rangeStartDate
@@ -425,19 +425,19 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
   // 4) Build compressed data
   let compressedData: { x: number; value: number; realDate: number }[] = []
   if (aggregatedData.length) {
-    const refDate = new Date(aggregatedData[0].date)
+    const refDate = new Date(aggregatedData[0]!.date)
     compressedData = aggregatedData.map((item) => {
-      const realDate = new Date(item.date)
+      const realDate = new Date(item!.date)
       const offset = compressDateToTradingOffset(realDate, refDate)
       return {
         x: offset,
-        value: item.value,
-        realDate: item.date,
+        value: item!.value,
+        realDate: item!.date,
       }
     })
   }
-  const dataMinOffset = compressedData.length ? compressedData[0].x : 0
-  const dataMaxOffset = compressedData.length ? compressedData[compressedData.length - 1].x : 0
+  const dataMinOffset = compressedData.length ? compressedData[0]!.x : 0
+  const dataMaxOffset = compressedData.length ? compressedData[compressedData.length - 1]!.x : 0
 
   // 5) Ticks
   const realMin = aggregatedData[0]?.date ?? 0
@@ -464,7 +464,7 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
 
   let finalTicks: number[] | undefined
   if (realTicks && aggregatedData.length) {
-    const refDate = new Date(aggregatedData[0].date)
+    const refDate = new Date(aggregatedData[0]!.date)
     finalTicks = compressTicks(realTicks, refDate)
   }
 

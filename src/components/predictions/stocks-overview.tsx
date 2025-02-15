@@ -3,7 +3,7 @@
 import {
   Card,
   CardContent
-} from "@/src/components/ui/card"
+} from "@/components/ui/card"
 import { ArrowBigUp, ArrowBigDown } from "lucide-react"
 
 export interface OverviewData {

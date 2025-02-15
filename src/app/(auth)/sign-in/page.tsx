@@ -1,4 +1,4 @@
-import { SignInForm } from "@/src/components/sign/sign-in-form";
+import { SignInForm } from "@/components/sign/sign-in-form";
 import Image from 'next/image';
 
 export default function SignIn() {

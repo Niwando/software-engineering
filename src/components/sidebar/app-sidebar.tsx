@@ -1,7 +1,7 @@
 "use client"
 import * as React from "react"
 import { Settings, ChartNoAxesCombined, Bot, History, User } from "lucide-react"
-import { NavUser } from "@/src/components/sidebar/nav-user"
+import { NavUser } from "@/components/sidebar/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   useSidebar,
   SidebarTrigger,
-} from "@/src/components/ui/sidebar"
+} from "@/components/ui/sidebar"
 
 // This is sample data
 const data = {
