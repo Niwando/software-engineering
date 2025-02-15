@@ -5,7 +5,7 @@ export default function SignIn() {
 
   return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-cover bg-center bg-no-repeat p-6 md:p-10">
-        <img
+        <Image
           src="/dashboard.jpeg"
           alt="Dashboard Background"
           width={1702}
