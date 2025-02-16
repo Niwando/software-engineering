@@ -108,6 +108,7 @@ export default function Page() {
       }
     }
     const maxDate = new Date(maxTimestamp)
+    console.log("maxDate", maxDate)
   
     // Filter data for the last day
     const lastDayData = chartData.filter((item) => {
@@ -185,13 +186,15 @@ export default function Page() {
     }
   }
 
-  const overviewData = getOverviewData(data)
-
   useEffect(() => {
     fetchStockData();
   }, []);
 
-  console.log(data)
+  console.log("data", data.length)
+
+  const overviewData = getOverviewData(data)
+
+  console.log("overviewData", overviewData)
 
   if (loading) {
     return <LoadingSpinner />
