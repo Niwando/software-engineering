@@ -113,8 +113,8 @@ def fine_tune_all_stocks():
 
     stocks = ["AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META", "NFLX", "AVGO", "PYPL"]
     WINDOW_SIZE = 60         # past 60 minutes input
-    forecast_horizon = 60    # next 60 minutes to predict
-    EPOCHS = 10
+    forecast_horizon = 390    # next 60 minutes to predict
+    EPOCHS = 50
     learning_rate = 1e-4
     features_list = ['open', 'high', 'low', 'close', 'volume',
                      'sin_hour', 'cos_hour', 'sin_minute', 'cos_minute',
