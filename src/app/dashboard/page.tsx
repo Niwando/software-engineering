@@ -89,7 +89,8 @@ export default function Page() {
     }
   
     // Convert dates to numbers
-    const timestamps = chartData.map((item) => Number(item.date))
+    const timestamps = chartData.map((item) => new Date(item.date).getTime())
+    console.log("timestamps", timestamps)
     if (timestamps.length === 0) {
       return {
         overallPerformance: 0,
@@ -149,11 +150,13 @@ export default function Page() {
         ? totalPerformance / Object.keys(stockStats).length
         : 0
     overallPerformance = Number(overallPerformance.toFixed(2))
-  
-    // Calculate overall value (sum of closing values of all stocks)
-    const overallValue = Number(
-      Object.values(stockStats).reduce((acc, cur) => acc + cur.closingValue, 0).toFixed(2)
-    )
+    
+    const sum = Object.values(stockStats).reduce((acc, cur) => {
+      return acc + parseFloat(cur.closingValue);
+    }, 0);
+    
+    const overallValue = sum.toFixed(2); 
+    console.log("overallValue", overallValue)
   
     // Determine best and worst performers, including their closing values
     let bestStock = { stock: "", performance: -Infinity, value: 0 }
