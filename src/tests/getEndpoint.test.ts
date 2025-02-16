@@ -1,5 +1,3 @@
-// __tests__/getEndpoint.test.ts
-
 import { GET } from "../app/api/database/data/route";
 import { supabase } from "@/lib/supabase";
 import { NextRequest } from "next/server";
