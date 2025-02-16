@@ -32,7 +32,7 @@ print("CSV Data Loaded:")
 print(df.head())
 
 # Ensure the 'timestamp' column is in datetime format
-df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True).dt.tz_convert('US/Eastern')
 
 # ------------------------------
 # 2. Check for New Data
@@ -99,3 +99,4 @@ for start in range(0, num_rows, BATCH_SIZE):
         print(f"Failed to insert batch starting at row {start} after {MAX_RETRIES} retries.")
 
 print("Data insertion complete.")
+
