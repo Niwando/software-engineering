@@ -188,5 +188,3 @@ def generate_and_insert_predictions():
 
     print("Prediction process complete for all symbols.")
 
-if __name__ == "__main__":
-    generate_and_insert_predictions()

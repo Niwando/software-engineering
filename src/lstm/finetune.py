@@ -211,5 +211,3 @@ def fine_tune_all_stocks():
 
     print("Fine-tuning complete for all stocks.")
 
-if __name__ == "__main__":
-    fine_tune_all_stocks()

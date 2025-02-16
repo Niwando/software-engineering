@@ -87,6 +87,13 @@ def insert_fetched_data(fetched_data):
             existing = response_db.dict().get("data", [])
             if existing:
                 max_ts = pd.to_datetime(existing[0]["timestamp"])
+                # Ensure max_ts is naive
+                if max_ts.tzinfo is not None:
+                    max_ts = max_ts.tz_localize(None)
+                # Ensure the fetched timestamps are also naive
+                df["timestamp"] = pd.to_datetime(df["timestamp"])
+                if df["timestamp"].dt.tz is not None:
+                    df["timestamp"] = df["timestamp"].dt.tz_localize(None)
                 df_new = df[df["timestamp"] > max_ts]
                 print(f"Existing data found for {symbol}, max timestamp: {max_ts}")
             else:
@@ -130,9 +137,4 @@ def insert_fetched_data(fetched_data):
             else:
                 print(f"Failed to insert batch for {symbol} starting at row {start} after {MAX_RETRIES} retries.")
 
-if __name__ == "__main__":
-    
-    API_KEY = "D3WKQGJTAEZJSVBI"
-    data = fetch_stock_data_only(API_KEY)
-    
-    insert_fetched_data(data)
+
