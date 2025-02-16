@@ -180,7 +180,7 @@ def fine_tune_all_stocks():
         train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
         # Load pre-trained model.
-        model_file = f"lstm/models/trained_model_{stock}.pth"
+        model_file = f"src/lstm/models/trained_model_{stock}.pth"
         if not os.path.exists(model_file):
             print(f"Pre-trained model file not found for {stock}. Skipping fine-tuning.")
             continue
