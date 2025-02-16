@@ -3,59 +3,105 @@ import { supabase } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   try {
-    const pageSize = 1000;
-    let allData = [];
-    let from = 0;
-    let to = pageSize - 1;
-    let keepFetching = true;
+    // 1) Aktuellstes Datum holen
+    const { data: maxDateArray, error: maxDateError } = await supabase.rpc("get_current_max_date");
+    if (maxDateError) {
+      console.error("Error fetching max_date:", maxDateError);
+      return NextResponse.json(
+        { error: "An error occurred while fetching the max date" },
+        { status: 500 }
+      );
+    }
+    if (!maxDateArray?.length || !maxDateArray) {
+      console.error("No max date returned from get_current_max_date()");
+      return NextResponse.json({ error: "No data returned for max date" }, { status: 404 });
+    }
+    const p_max_date = maxDateArray;
 
-    while (keepFetching) {
-      const { data, error } = await supabase
-        .from("stock_data")
-        .select("timestamp, symbol, close")
-        .range(from, to);
+    // 2) Chunking für den neuesten Tag
+    let latestDayData: any[] = [];
+    let keepFetchingLatest = true;
+    let latestOffset = 0;
+    let pageSize = 1000;
 
-      if (error) {
-        console.error("Error fetching data:", error);
-        return NextResponse.json(
-          { error: "An error occurred while fetching data" },
-          { status: 500 }
-        );
-      }
-      const filteredData = data.map(item => {
-        // Ziehe 5 Stunden vom Timestamp ab
-        const adjustedDate = new Date(item.timestamp);
-        adjustedDate.setHours(adjustedDate.getHours() - 5);
-      
-        return {
-          ...item,
-          // Aktualisierter Timestamp (als ISO-String)
-          timestamp: adjustedDate.toISOString(),
-          // Rundung von close auf zwei Nachkommastellen
-          close: Number(item.close).toFixed(2)
-        };
+    while (keepFetchingLatest) {
+      const { data: latestChunk, error } = await supabase.rpc("get_latest_day_data_chunked", {
+        p_max_date,
+        p_offset: latestOffset,
+        p_limit: pageSize,
       });
 
-      // Füge die gefilterten und angepassten Daten zu allData hinzu
-      allData = allData.concat(filteredData);
-      console.log(`Fetched ${allData.length} records`);
+      if (error) {
+        console.error("Error fetching chunk of latest day data:", error);
+        // Abbrechen oder weiter nach Bedarf
+        break;
+      }
 
-      // Falls weniger als pageSize Datensätze zurückgegeben wurden, sind keine weiteren vorhanden.
-      if (data.length < pageSize) {
-        keepFetching = false;
+      if (!latestChunk?.length) {
+        keepFetchingLatest = false;
       } else {
-        // Nächste Seite abrufen
-        from += pageSize;
-        to += pageSize;
+        latestDayData = latestDayData.concat(latestChunk);
+        latestOffset += pageSize;
       }
     }
 
-    return NextResponse.json(allData, { status: 200 });
+    // 3) Beispiel: Stündliche Daten (5 Tage) – falls ebenfalls sehr groß, analoges Chunking
+    const { data: fiveDayData, error: fiveDayError } = await supabase.rpc("get_five_day_hourly", {
+        p_max_date,
+      });
+      if (fiveDayError) {
+        console.error("Error fetching five-day data:", fiveDayError);
+        return NextResponse.json(
+          { error: "An error occurred while fetching five day data" },
+          { status: 500 }
+        );
+      }
+
+    // 4) Beispiel: Ältere Daten (Tagesende) – hast du schon chunking:
+    let olderDayData: any[] = [];
+    let keepFetchingOlder = true;
+    let olderOffset = 0;
+    pageSize = 500;
+
+    while (keepFetchingOlder) {
+      const { data: chunk, error } = await supabase.rpc("get_older_day_end_chunked", {
+        p_max_date,
+        p_offset: olderOffset,
+        p_limit: pageSize,
+      });
+
+      if (error) {
+        console.error("Error fetching chunk of older data:", error);
+        break;
+      }
+
+      if (!chunk?.length) {
+        keepFetchingOlder = false;
+      } else {
+        olderDayData = olderDayData.concat(chunk);
+        olderOffset += pageSize;
+      }
+    }
+
+    // 5) Zusammenfügen
+    let combinedData = [...latestDayData, ...fiveDayData, ...olderDayData /* + ggf. fiveDayData usw. */];
+
+    // 6) Sortieren und transformieren
+    combinedData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    const transformedData = combinedData.map((item) => {
+      const adjustedDate = new Date(item.timestamp);
+      adjustedDate.setHours(adjustedDate.getHours() - 5);
+      return {
+        ...item,
+        timestamp: adjustedDate.toISOString(),
+        close: Number(item.close).toFixed(2),
+      };
+    });
+
+    return NextResponse.json(transformedData, { status: 200 });
   } catch (error) {
     console.error("Unexpected Error:", error);
-    return NextResponse.json(
-      { error: "An unexpected error occurred" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "An unexpected error occurred" }, { status: 500 });
   }
 }

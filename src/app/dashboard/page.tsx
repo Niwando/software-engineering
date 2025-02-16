@@ -191,6 +191,8 @@ export default function Page() {
     fetchStockData();
   }, []);
 
+  console.log(data)
+
   if (loading) {
     return <LoadingSpinner />
   }
