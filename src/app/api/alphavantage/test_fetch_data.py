@@ -4,7 +4,7 @@ import json
 import tempfile
 import pytest
 from unittest.mock import MagicMock
-from fetch import fetch_and_save_data 
+from fetch import fetch_and_save_data  # Adjust this import as needed
 
 def test_fetch_and_save_data(tmp_path, monkeypatch):
     # Setup: use a temporary directory to simulate the 'data' folder
@@ -14,8 +14,8 @@ def test_fetch_and_save_data(tmp_path, monkeypatch):
     # We'll override os.path.exists and os.makedirs for the 'data' folder.
     original_exists = os.path.exists
     def fake_exists(path):
-        # If the path equals "data", return True (simulate that the folder exists)
-        if path == "data":
+        # If the path equals "data", simulate that it exists
+        if str(path) == "data":
             return True
         return original_exists(path)
     monkeypatch.setattr(os.path, "exists", fake_exists)
@@ -26,9 +26,9 @@ def test_fetch_and_save_data(tmp_path, monkeypatch):
     # Also override open() so that files under "data" are written to our temp_data_dir.
     original_open = open
     def fake_open(file, mode, *args, **kwargs):
-        # If file starts with "data", write to our temp directory.
-        if file.startswith("data"):
-            filename = os.path.basename(file)
+        file_str = str(file)  # Convert file to string if it's a PosixPath
+        if file_str.startswith("data"):
+            filename = os.path.basename(file_str)
             file = os.path.join(temp_data_dir, filename)
         return original_open(file, mode, *args, **kwargs)
     monkeypatch.setattr("builtins.open", fake_open)
