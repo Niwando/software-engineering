@@ -15,7 +15,6 @@ export default function Page() {
     function getOverviewData(
         chartData: { date: number; value: number; stock: string }[]
       ) {
-        console.log("chartData", chartData[0])
         if (chartData.length === 0) {
           return {
             overallPerformance: 0,
@@ -28,7 +27,6 @@ export default function Page() {
       
         // Convert dates to numbers
         const timestamps = chartData.map((item) => new Date(item.date).getTime())
-        console.log("timestamps", timestamps)
         if (timestamps.length === 0) {
           return {
             overallPerformance: 0,
@@ -47,7 +45,6 @@ export default function Page() {
           }
         }
         const maxDate = new Date(maxTimestamp)
-        console.log("maxDate", maxDate)
       
         // Filter data for the last day
         const lastDayData = chartData.filter((item) => {
@@ -94,7 +91,6 @@ export default function Page() {
         }, 0);
         
         const overallValue = sum.toFixed(2); 
-        console.log("overallValue", overallValue)
       
         // Determine best and worst performers, including their closing values
         let bestStock = { stock: "", performance: -Infinity, value: 0 }
@@ -154,14 +150,7 @@ export default function Page() {
       };
     useEffect(() => {
         fetchStockData();
-        // if (data.length > 0) {
-            // const uniqueStocks = Array.from(new Set(data.map(item => item.stock)));
-            // setStockNames(uniqueStocks);
-          // }
-        // console.log("uniqueStocks", uniqueStocks)
       }, []);
-    
-      console.log("data", data.length)
     
       const overviewData = getOverviewData(data)
       const uniqueStocks = Array.from(new Set(data.map(item => item.stock)));

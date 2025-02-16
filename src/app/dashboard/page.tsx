@@ -15,7 +15,7 @@ export default function Page() {
   const fetchStockData = async () => {
     try {
       // Passe den URL-Pfad an deinen Endpunkt an
-      const response = await fetch("/api/database/dataALL");
+      const response = await fetch("/api/database/data");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -52,7 +52,6 @@ export default function Page() {
   
     // Convert dates to numbers
     const timestamps = chartData.map((item) => new Date(item.date).getTime())
-    console.log("timestamps", timestamps)
     if (timestamps.length === 0) {
       return {
         overallPerformance: 0,
@@ -71,7 +70,6 @@ export default function Page() {
       }
     }
     const maxDate = new Date(maxTimestamp)
-    console.log("maxDate", maxDate)
   
     // Filter data for the last day
     const lastDayData = chartData.filter((item) => {
@@ -118,7 +116,6 @@ export default function Page() {
     }, 0);
     
     const overallValue = sum.toFixed(2); 
-    console.log("overallValue", overallValue)
   
     // Determine best and worst performers, including their closing values
     let bestStock = { stock: "", performance: -Infinity, value: 0 }
@@ -155,11 +152,7 @@ export default function Page() {
     fetchStockData();
   }, []);
 
-  console.log("data", data.length)
-
   const overviewData = getOverviewData(data)
-
-  console.log("overviewData", overviewData)
 
   if (loading) {
     return <LoadingSpinner />

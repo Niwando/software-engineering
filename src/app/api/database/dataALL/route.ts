@@ -38,7 +38,6 @@ export async function GET(req: NextRequest) {
 
       // Füge die gefilterten und angepassten Daten zu allData hinzu
       allData = allData.concat(filteredData);
-      console.log(`Fetched ${allData.length} records`);
 
       // Falls weniger als pageSize Datensätze zurückgegeben wurden, sind keine weiteren vorhanden.
       if (data.length < pageSize) {

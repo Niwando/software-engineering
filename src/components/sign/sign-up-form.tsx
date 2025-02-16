@@ -148,11 +148,6 @@ export function SignUpForm({ className, ...props }: React.HTMLAttributes<HTMLDiv
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (validateForm()) {
-      // Handle successful form submission
-      console.log("Form submitted successfully", formData);
-    } else {
-      console.log("Validation errors:", errors);
-    }
   };
 
   return (

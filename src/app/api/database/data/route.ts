@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     let latestDayData: any[] = [];
     let keepFetchingLatest = true;
     let latestOffset = 0;
-    let pageSize = 1000;
+    let pageSize = 500;
 
     while (keepFetchingLatest) {
       const { data: latestChunk, error } = await supabase.rpc("get_latest_day_data_chunked", {
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     let olderDayData: any[] = [];
     let keepFetchingOlder = true;
     let olderOffset = 0;
-    pageSize = 50;
+    pageSize = 500;
 
     while (keepFetchingOlder) {
       const { data: chunk, error } = await supabase.rpc("get_older_day_end_chunked", {
