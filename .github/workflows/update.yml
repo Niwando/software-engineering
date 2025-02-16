@@ -25,5 +25,9 @@ jobs:
           fi
 
       - name: Run Python script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          API_KEY: ${{ secrets.API_KEY }}
         run: |
-          python path/to/your_script.py
+          python src/main.py
