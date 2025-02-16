@@ -433,39 +433,74 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
   const [open, setOpen] = React.useState(false)
   const [selectedStock, setSelectedStock] = React.useState("GOOGL")
 
-  // 1) Filter
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date)
-    const referenceDate = new Date()
-    let rangeStartDate = new Date(referenceDate)
+  // Schritt 1: Einmalige, sortierte Datumseinträge aus chartData (ohne Uhrzeit)
+  const uniqueDateStrings = [
+    ...new Set(chartData.map((item) => item.date.split("T")[0])),
+  ];
+  console.log(uniqueDateStrings)
+  const sortedUniqueDates = uniqueDateStrings
+    .map((d) => new Date(d))
+    .sort((a, b) => a - b);
 
+  // Das letzte (aktuellste) eindeutige Datum
+  const lastUniqueDate = sortedUniqueDates[sortedUniqueDates.length - 1];
+
+  // Für "5d" wollen wir die letzten 5 eindeutigen Datumseinträge als Strings (z.B. "2023-05-12")
+  let allowedDateStrings = null;
+  if (timeRange === "5d") {
+    allowedDateStrings = new Set(
+      sortedUniqueDates
+        .slice(-5)
+        .map((d) => d.toISOString().split("T")[0])
+    );
+  }
+
+  const filteredData = chartData.filter((item) => {
+    // Filtere zunächst das gewünschte Stock-Symbol
     if (item.stock !== selectedStock) return false;
 
+    // Hole den Datumsteil (z.B. "2023-05-12") aus dem Timestamp
+    const itemDateString = item.date.split("T")[0];
+    const itemDate = new Date(itemDateString);
+
     if (timeRange === "1d") {
-      const day = referenceDate.getDay()
-      if (day === 0) {
-        rangeStartDate.setDate(referenceDate.getDate() - 2)
-      } else if (day === 6) {
-        rangeStartDate.setDate(referenceDate.getDate() - 1)
-      }
-      rangeStartDate.setHours(9, 30, 0, 0)
-      const endDate = new Date(rangeStartDate)
-      endDate.setHours(16, 0, 0, 0)
-      return date >= rangeStartDate && date <= endDate
+      // Nur Datensätze des letzten Tages (ohne Uhrzeit) berücksichtigen
+      const lastDateString = lastUniqueDate.toISOString().split("T")[0];
+      if (itemDateString !== lastDateString) return false;
+
+      // Zusätzlich: Handelszeiten filtern (zwischen 9:30 und 16:00)
+      const dateObj = new Date(item.date);
+      const hours = dateObj.getHours();
+      const minutes = dateObj.getMinutes();
+      const timeInMinutes = hours * 60 + minutes;
+      // 9:30 -> 570 Minuten, 16:00 -> 960 Minuten
+      return timeInMinutes >= 570 && timeInMinutes <= 960;
     } else if (timeRange === "5d") {
-      rangeStartDate.setDate(referenceDate.getDate() - 5)
+      // Nur Datensätze, deren Datum in den letzten 5 eindeutigen Tagen liegt
+      return allowedDateStrings.has(itemDateString);
     } else if (timeRange === "1m") {
-      rangeStartDate.setMonth(referenceDate.getMonth() - 1)
+      // Alle Datensätze von (letztes Datum - 1 Monat) bis zum letzten Datum
+      const oneMonthAgo = new Date(lastUniqueDate);
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      return itemDate >= oneMonthAgo && itemDate <= lastUniqueDate;
     } else if (timeRange === "3m") {
-      rangeStartDate.setMonth(referenceDate.getMonth() - 3)
+      const threeMonthsAgo = new Date(lastUniqueDate);
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+      return itemDate >= threeMonthsAgo && itemDate <= lastUniqueDate;
     } else if (timeRange === "1y") {
-      rangeStartDate.setFullYear(referenceDate.getFullYear() - 1)
+      const oneYearAgo = new Date(lastUniqueDate);
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      return itemDate >= oneYearAgo && itemDate <= lastUniqueDate;
     } else if (timeRange === "allTime") {
-      rangeStartDate = new Date(chartData[0]!.date)
+      // Keine Filterung nach Datum
+      return true;
     }
-    rangeStartDate.setHours(9, 30, 0, 0)
-    return date >= rangeStartDate
-  })
+
+    return false;
+  });
+
+  console.log(filteredData)
+
 
   // 2) Aggregation
   let aggregatedData
@@ -561,6 +596,11 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
       year: timeRange === "allTime" ? "numeric" : undefined,
     })
   }
+  const yValues = compressedData.map(item => item.value);
+  const yMin = Math.min(...yValues);
+  const yMax = Math.max(...yValues);
+  const yPadding = (yMax - yMin) * 0.1;
+  const domain = [yMin - yPadding, yMax + yPadding];
 
   function finalFormatter(
     value: number,
@@ -723,7 +763,8 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
               tickFormatter={finalTickFormatter}
             />
             <YAxis
-              tickFormatter={(value) => `${value} USD`}
+            domain={domain}
+              tickFormatter={(value) => Number(value).toFixed(2)}
               tick={{
                 style: { whiteSpace: "nowrap" }, // Prevent multi-line wrapping
               }}
