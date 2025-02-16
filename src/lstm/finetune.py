@@ -162,7 +162,7 @@ def fine_tune_all_stocks():
         print(f"Fine-tuning data range for {stock}: {finetune_df.index.min()} to {finetune_df.index.max()}")
 
         # Normalize using an existing scaler.
-        scaler_file = f"lstm/scalers/scaler_minute_{stock}.pkl"
+        scaler_file = f"src/lstm/scalers/scaler_minute_{stock}.pkl"
         if not os.path.exists(scaler_file):
             print(f"Scaler file not found for {stock}. Skipping fine-tuning.")
             continue
