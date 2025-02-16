@@ -19,7 +19,7 @@ from supabase import create_client, Client
 # ------------------------------
 def process_stock_data(df: pd.DataFrame, fill_method: str = 'ffill',
                        filter_market_hours: bool = True, timezone: str = 'US/Eastern') -> pd.DataFrame:
-    # If the index has no timezone, localize it; otherwise, convert to the desired timezone.
+    
     if df.index.tz is None:
         df.index = df.index.tz_localize(timezone)
     else:
@@ -82,7 +82,7 @@ class StockDataset(Dataset):
         return self.X[idx], self.y[idx]
 
 # ------------------------------
-# Model Architecture (unchanged)
+# Model Architecture
 # ------------------------------
 class MultiStepLSTMModel(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, forecast_horizon, dropout=0.2):
@@ -145,7 +145,7 @@ def fine_tune_all_stocks():
             print(f"Error retrieving data for {stock}: {e}")
             continue
 
-        # Process data in memory.
+        # Process data.
         try:
             processed_df = process_stock_data(df, fill_method='ffill', filter_market_hours=True)
             processed_df = add_time_features(processed_df)

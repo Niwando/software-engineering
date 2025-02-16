@@ -29,7 +29,7 @@ def fetch_stock_data_only(api_key):
             data = response.json()
             fetched_data[symbol] = data
             print(f"Data fetched for {symbol}.")
-            # Pause to help avoid hitting the API rate limit (adjust the sleep time as needed).
+            # Pause to help avoid hitting the API rate limit.
             time.sleep(12)
         except Exception as e:
             print(f"Error fetching data for {symbol}: {e}")

@@ -46,7 +46,7 @@ def generate_and_insert_predictions():
     WINDOW_SIZE = 60              # last 60 minutes as input
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Instead of reading a processed CSV, query the DB for recent data.
+    #  Query the DB for recent data.
     stocks_query = supabase.table("stock_data").select("symbol").execute()
     stocks_data = stocks_query.dict().get("data", [])
     # Get unique symbols.
@@ -109,13 +109,13 @@ def generate_and_insert_predictions():
         market_open = pd.Timestamp.combine(next_day, dtime(9, 30))
         print(f"Last timestamp for {symbol}: {last_timestamp}. Next market open: {market_open}")
 
-        predictions = []  # list of dicts: {"time": ..., "predicted_close": ..., "symbol": ...}
+        predictions = []  
         total_predicted = 0
 
         while total_predicted < TARGET_HORIZON:
             with torch.no_grad():
                 pred_norm = model(current_chain.unsqueeze(0)).cpu().numpy().flatten()
-            # Inverse-transform only the "close" value (assumed at index 3).
+            # Inverse-transform only the "close" value
             placeholder = np.zeros((len(pred_norm), INPUT_SIZE))
             placeholder[:, 3] = pred_norm
             pred_original = scaler.inverse_transform(placeholder)[:, 3]
@@ -134,7 +134,7 @@ def generate_and_insert_predictions():
             new_rows = []
             for i in range(len(pred_norm)):
                 ft = market_open + timedelta(minutes=total_predicted - len(pred_norm) + i)
-                # Use predicted close for price fields; use last known volume.
+                # Use predicted close for price fields.
                 last_chain_row = current_chain[-1].cpu().numpy().reshape(1, -1)
                 last_volume = scaler.inverse_transform(last_chain_row)[0, 4]
                 row = {
@@ -162,7 +162,7 @@ def generate_and_insert_predictions():
             updated_chain = np.concatenate([current_chain.cpu().numpy(), new_rows_arr], axis=0)
             current_chain = torch.tensor(updated_chain[-WINDOW_SIZE:], dtype=torch.float32).to(device)
 
-        # Insert predictions directly into the DB.
+        # Insert predictions into the DB.
         BATCH_SIZE = 50
         MAX_RETRIES = 3
         num_preds = len(predictions)
