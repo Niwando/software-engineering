@@ -5,44 +5,6 @@ import { MainNav } from "@/components/dashboard/main-nav"
 import { useEffect, useState } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner"
 
-// ----------------- RAW DATA GENERATION -----------------
-
-function isTradingDay(date: Date) {
-  const day = date.getDay()
-  return day !== 0 && day !== 6
-}
-
-function generateData(startDate: string, numDays: number, intervalMinutes: number) {
-  const data: { date: number; value: number; stock: string }[] = []
-  const c = new Date(startDate)
-  for (let i = 0; i < numDays; i++) {
-    if (isTradingDay(c)) {
-      c.setHours(9, 30, 0, 0)
-      const e = new Date(c)
-      e.setHours(16, 0, 0, 0)
-      if (i === numDays - 2) e.setHours(14, 0, 0, 0)
-      while (c <= e) {
-        data.push({
-          date: c.getTime(),
-          value: Number((Math.random() * 250 + 50).toFixed(2)), // GOOGL value with 2 decimal places
-          stock: "GOOGL",
-        })
-        data.push({
-          date: c.getTime(),
-          value: Number((Math.random() * 750 + 50).toFixed(2)), // MSFT value with 2 decimal places
-          stock: "MSFT",
-        })
-        c.setMinutes(c.getMinutes() + intervalMinutes)
-      }
-      c.setDate(c.getDate() + 1)
-    } else {
-      // skip weekends
-      c.setDate(c.getDate() + 1)
-    }
-  }
-  return data
-}
-
 export default function Page() {
 
   const [data, setData] = useState([]);

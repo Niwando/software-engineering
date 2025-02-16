@@ -22,7 +22,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Check, ChevronsUpDown } from "lucide-react"
- 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,7 +38,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 
-// Define types for chart data
+// ---------- Typen ----------
 interface ChartDataItem {
   date: string | number
   value: number
@@ -50,94 +49,61 @@ interface AreaChartInteractiveProps {
   chartData: ChartDataItem[]
 }
 
-/** If you want 16:00 => next day 9:30 to be offset=60, set this to 60. */
+/** Constants für die Komprimierung */
 const OFF_HOURS_BETWEEN_CLOSE_AND_NEXT_OPEN = 60
-/** Each trading day => 9:30–16:00 => 6.5h =>390 min. */
 const MINUTES_PER_TRADING_DAY = 390
-/** One “full” day block => 390 + 60 => 450. */
 const DAY_BLOCK = MINUTES_PER_TRADING_DAY + OFF_HOURS_BETWEEN_CLOSE_AND_NEXT_OPEN
 
+/** Aktien-Auswahl */
 const stocks = [
-  {
-    value: "GOOGL",
-    label: "GOOGL | Alphabet",
-  },
-  {
-    value: "AMZN",
-    label: "AMZN | Amazon",
-  },
-  {
-    value: "AAPL",
-    label: "AAPL | Apple",
-  },
-  {
-    value: "AVGO",
-    label: "AVGO | Broadcom",
-  },
-  {
-    value: "META",
-    label: "META | Meta Platforms",
-  },
-  {
-    value: "MSFT",
-    label: "MSFT | Microsoft",
-  },
-  {
-    value: "NFLX",
-    label: "NFLX | Netflix",
-  },
-  {
-    value: "NVDA",
-    label: "NVDA | Nvidia",
-  },
-  {
-    value: "PYPL",
-    label: "PYPL | PayPal",
-  },
-  {
-    value: "TSLA",
-    label: "TSLA | Tesla",
-  },
+  { value: "GOOGL", label: "GOOGL | Alphabet" },
+  { value: "AMZN",  label: "AMZN | Amazon" },
+  { value: "AAPL",  label: "AAPL | Apple" },
+  { value: "AVGO",  label: "AVGO | Broadcom" },
+  { value: "META",  label: "META | Meta Platforms" },
+  { value: "MSFT",  label: "MSFT | Microsoft" },
+  { value: "NFLX",  label: "NFLX | Netflix" },
+  { value: "NVDA",  label: "NVDA | Nvidia" },
+  { value: "PYPL",  label: "PYPL | PayPal" },
+  { value: "TSLA",  label: "TSLA | Tesla" },
 ]
 
-/** True if Monday–Friday (skipping Sat=6, Sun=0). */
+/** Prüft, ob Montag–Freitag (UTC) */
 function isTradingDay(date: Date) {
-  const day = date.getDay()
+  const day = date.getUTCDay()
   return day !== 0 && day !== 6
 }
 
-/** Check if time is between 9:30 and 16:00. */
+/** Prüft, ob Uhrzeit (UTC) zwischen 9:30 und 16:00 liegt */
 function isTradingHour(date: Date) {
-  const h = date.getHours()
-  const m = date.getMinutes()
+  const h = date.getUTCHours()
+  const m = date.getUTCMinutes()
   if (h < 9 || (h === 9 && m < 30)) return false
   if (h > 16 || (h === 16 && m > 0)) return false
   return true
 }
 
-/** 9:30 => 570, 16:00 => 960. */
-function minutesFromMidnight(d: Date) {
-  return d.getHours() * 60 + d.getMinutes()
+/** Minuten seit Mitternacht UTC */
+function minutesFromMidnightUTC(d: Date) {
+  return d.getUTCHours() * 60 + d.getUTCMinutes()
 }
 
-/** If 'start', clamp to 9:30 if earlier; if 'end', clamp to 16:00 if after. */
+/** Korrigiert Zeit auf 9:30 bzw. 16:00 UTC */
 function clampToTradingSession(d: Date, mode: "start" | "end") {
-  const h = d.getHours(),
-    m = d.getMinutes()
+  const h = d.getUTCHours()
+  const m = d.getUTCMinutes()
   if (mode === "start") {
     if (h < 9 || (h === 9 && m < 30)) {
-      d.setHours(9, 30, 0, 0)
+      d.setUTCHours(9, 30, 0, 0)
     }
   } else {
     if (h > 16 || (h === 16 && m > 0)) {
-      d.setHours(16, 0, 0, 0)
+      d.setUTCHours(16, 0, 0, 0)
     }
   }
 }
 
-/**
- * Count how many trading days from refMid up to but not including dayMid’s day
- */
+/** Anzahl Handelstage zwischen refMid und dayMid (exklusive) */
 function getDayIndex(refMid: Date, dayMid: Date): number {
   if (dayMid <= refMid) return 0
   let dayIdx = 0
@@ -146,29 +112,26 @@ function getDayIndex(refMid: Date, dayMid: Date): number {
     if (isTradingDay(c)) {
       dayIdx++
     }
-    c.setDate(c.getDate() + 1)
+    c.setUTCDate(c.getUTCDate() + 1)
   }
   return dayIdx
 }
 
-/**
- * partialInDay(d):
- *   how many minutes from 9:30 to d’s HH:MM (max 390) if d is a trading day
- */
+/** Minuten zwischen 9:30 UTC und d (max. 390) */
 function partialInDay(d: Date): number {
   if (!isTradingDay(d)) return 0
-  const mm = minutesFromMidnight(d)
-  if (mm < 570) return 0 // <9:30 =>0
-  if (mm > 960) return 390 // >16:00 =>390
-  return mm - 570 // minutes after 9:30
+  const mm = minutesFromMidnightUTC(d)
+  if (mm < 570) return 0
+  if (mm > 960) return 390
+  return mm - 570
 }
 
-/** True if same calendar date (year,month,day). */
-function sameCalendarDay(a: Date, b: Date) {
+/** Gleicher Kalendertag in UTC? */
+function sameCalendarDayUTC(a: Date, b: Date) {
   return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
+    a.getUTCFullYear() === b.getUTCFullYear() &&
+    a.getUTCMonth() === b.getUTCMonth() &&
+    a.getUTCDate() === b.getUTCDate()
   )
 }
 
@@ -177,31 +140,23 @@ function sameCalendarDay(a: Date, b: Date) {
 function compressDateToTradingOffset(targetDate: Date, referenceDate: Date): number {
   const ref = new Date(referenceDate)
   clampToTradingSession(ref, "start")
-
   const tgt = new Date(targetDate)
   clampToTradingSession(tgt, "end")
-
   if (ref >= tgt) return 0
 
+  // Mitternacht UTC
   const refMid = new Date(ref)
-  refMid.setHours(0, 0, 0, 0)
-
+  refMid.setUTCHours(0, 0, 0, 0)
   const tgtMid = new Date(tgt)
-  tgtMid.setHours(0, 0, 0, 0)
+  tgtMid.setUTCHours(0, 0, 0, 0)
 
-  // dayIndex => how many trading days from refMid..tgtMid (exclusive)
   const dIdx = getDayIndex(refMid, tgtMid)
   let offset = dIdx * DAY_BLOCK
-
-  // partial day
   let partial = partialInDay(tgt)
-
-  // if same day => partial from ref => subtract partialInDay(ref)
-  if (sameCalendarDay(refMid, tgtMid)) {
+  if (sameCalendarDayUTC(refMid, tgtMid)) {
     partial -= partialInDay(ref)
     if (partial < 0) partial = 0
   }
-
   offset += partial
   return offset > 0 ? offset : 0
 }
@@ -213,43 +168,35 @@ function expandTradingOffsetToDate(tradingOffset: number, referenceDate: Date): 
 
   const fullDays = Math.floor(tradingOffset / DAY_BLOCK)
   let leftover = tradingOffset % DAY_BLOCK
-
   const refMid = new Date(ref)
-  refMid.setHours(0, 0, 0, 0)
-
+  refMid.setUTCHours(0, 0, 0, 0)
   const cursor = new Date(refMid)
   let usedDays = 0
   while (usedDays < fullDays) {
     if (isTradingDay(cursor)) {
       usedDays++
     }
-    cursor.setDate(cursor.getDate() + 1)
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
   }
-
   if (leftover < 0) leftover = 0
-
   const dayMid = new Date(cursor)
-  dayMid.setHours(0, 0, 0, 0)
-
-  if (sameCalendarDay(dayMid, refMid)) {
-    // same day => leftover from ref
+  dayMid.setUTCHours(0, 0, 0, 0)
+  if (sameCalendarDayUTC(dayMid, refMid)) {
     return addLeftoverInSameDay(ref, leftover)
   } else {
-    // skip weekend
     while (!isTradingDay(cursor)) {
-      cursor.setDate(cursor.getDate() + 1)
+      cursor.setUTCDate(cursor.getUTCDate() + 1)
     }
     const startDay = new Date(cursor)
-    startDay.setHours(9, 30, 0, 0)
+    startDay.setUTCHours(9, 30, 0, 0)
     return addLeftoverInSameDay(startDay, leftover)
   }
 }
 
-/** move leftover minutes within a single day from baseDate => forward. */
 function addLeftoverInSameDay(baseDate: Date, leftover: number): Date {
   const r = new Date(baseDate)
   while (leftover > 0) {
-    r.setMinutes(r.getMinutes() + 1)
+    r.setUTCMinutes(r.getUTCMinutes() + 1)
     if (isTradingDay(r) && isTradingHour(r)) {
       leftover--
     }
@@ -257,13 +204,10 @@ function addLeftoverInSameDay(baseDate: Date, leftover: number): Date {
   return r
 }
 
-
+/** ChartConfig für Recharts */
 const chartConfig = {
   visitors: { label: "Visitors" },
-  value: {
-    label: "Value",
-    color: "hsl(var(--chart-1))",
-  },
+  value: { label: "Value", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig
 
 // ----------------- AGGREGATORS -----------------
@@ -273,7 +217,7 @@ function aggregateDataByDayLast(data: { date: number; value: number }[]) {
   let lastValue: { date: number; value: number } | null = null
   data.forEach((item) => {
     const d = new Date(item.date)
-    const day = d.getDate()
+    const day = d.getUTCDate()
     if (currentDay === null || day !== currentDay) {
       if (lastValue) ag.push(lastValue)
       currentDay = day
@@ -283,13 +227,14 @@ function aggregateDataByDayLast(data: { date: number; value: number }[]) {
   if (lastValue) ag.push(lastValue)
   return ag
 }
+
 function aggregateDataByDayFirst(data: { date: number; value: number }[]) {
   const ag: { date: number; value: number }[] = []
   let currentDay: number | null = null
   let firstValue: { date: number; value: number } | null = null
   data.forEach((item) => {
     const d = new Date(item.date)
-    const day = d.getDate()
+    const day = d.getUTCDate()
     if (currentDay === null || day !== currentDay) {
       if (firstValue) ag.push(firstValue)
       currentDay = day
@@ -299,7 +244,7 @@ function aggregateDataByDayFirst(data: { date: number; value: number }[]) {
   if (firstValue) ag.push(firstValue)
   return ag
 }
-/** lumps 9:31..10:00 => aggregator=10:00, etc. */
+
 function aggregateDataHourCustom(data: { date: number; value: number }[]) {
   const bucketMap: Record<number, { date: number; value: number }> = {}
   for (const item of data) {
@@ -315,8 +260,8 @@ function aggregateDataHourCustom(data: { date: number; value: number }[]) {
 }
 
 function getHourBucket(date: Date) {
-  const h = date.getHours(),
-    m = date.getMinutes()
+  const h = date.getUTCHours()
+  const m = date.getUTCMinutes()
   if (h === 9 && m === 30) return new Date(date)
   let aggregatorHour = h
   if (m >= 1) {
@@ -326,21 +271,21 @@ function getHourBucket(date: Date) {
     aggregatorHour = 16
   }
   const b = new Date(date)
-  b.setHours(aggregatorHour, 0, 0, 0)
+  b.setUTCHours(aggregatorHour, 0, 0, 0)
   return b
 }
 
-// ----------------- TICK GENERATORS (FIX) -----------------
+// ----------------- TICK GENERATORS -----------------
 
 function generateHourlyTicks(startTs: number, endTs: number) {
   const ticks: number[] = []
   const c = new Date(startTs)
-  if (c.getMinutes() !== 0) {
-    c.setHours(c.getHours() + 1, 0, 0, 0)
+  if (c.getUTCMinutes() !== 0) {
+    c.setUTCHours(c.getUTCHours() + 1, 0, 0, 0)
   }
   while (c.getTime() <= endTs) {
     ticks.push(c.getTime())
-    c.setHours(c.getHours() + 1)
+    c.setUTCHours(c.getUTCHours() + 1)
   }
   return ticks
 }
@@ -348,81 +293,89 @@ function generateHourlyTicks(startTs: number, endTs: number) {
 function generateDailyTicks(minTs: number, maxTs: number) {
   const ticks: number[] = []
   const c = new Date(minTs)
-  c.setHours(9, 30, 0, 0)
+  c.setUTCHours(9, 30, 0, 0)
   while (c.getTime() <= maxTs) {
     ticks.push(c.getTime())
-    c.setDate(c.getDate() + 1)
-    c.setHours(9, 30, 0, 0)
+    c.setUTCDate(c.getUTCDate() + 1)
+    c.setUTCHours(9, 30, 0, 0)
   }
   return ticks
 }
 
-/**
- * Generate monthly ticks on the first trading day of each month
- * at 9:30. If the 1st is on a weekend, we skip forward to the
- * next Monday (or next valid trading day).
- */
-function generateMonthlyTicks(startTS: number, endTS: number) {
+/** Ein Tick pro Woche (z. B. immer Montag 9:30 UTC) */
+function generateWeeklyTicks(minTs: number, maxTs: number): number[] {
   const ticks: number[] = []
+  const c = new Date(minTs)
+  while (c.getUTCDay() !== 1) {
+    c.setUTCDate(c.getUTCDate() + 1)
+  }
+  c.setUTCHours(9, 30, 0, 0)
+  while (c.getTime() <= maxTs) {
+    ticks.push(c.getTime())
+    c.setUTCDate(c.getUTCDate() + 7)
+  }
+  return ticks
+}
 
-  // Move c to the "first-of-month at 9:30" on or after startTS
+function generateMonthlyTicks(startTS: number, endTS: number): number[] {
+  const ticks: number[] = []
   const c = new Date(startTS)
-  c.setDate(1)
-  c.setHours(23, 59, 59, 99)
+  c.setUTCDate(1)
+  c.setUTCHours(9, 30, 0, 0)
   if (c.getTime() < startTS) {
-    c.setMonth(c.getMonth() + 1, 1)
-    c.setHours(23, 59, 59, 99)
+    c.setUTCMonth(c.getUTCMonth() + 1, 1)
+    c.setUTCHours(9, 30, 0, 0)
   }
-  // If that's a weekend, push forward to a trading day
   while (!isTradingDay(c)) {
-    c.setDate(c.getDate() + 1)
+    c.setUTCDate(c.getUTCDate() + 1)
+    c.setUTCHours(9, 30, 0, 0)
   }
-  c.setHours(23, 59, 59, 99)
-
-  // Collect ticks
   while (c.getTime() <= endTS) {
     ticks.push(c.getTime())
-    // Next month => go to day=1 => then skip weekend
-    c.setMonth(c.getMonth() + 1, 1)
-    c.setHours(23, 59, 59, 99)
+    c.setUTCMonth(c.getUTCMonth() + 1, 1)
+    c.setUTCHours(9, 30, 0, 0)
     while (!isTradingDay(c)) {
-      c.setDate(c.getDate() + 1)
+      c.setUTCDate(c.getUTCDate() + 1)
+      c.setUTCHours(9, 30, 0, 0)
     }
-    c.setHours(23, 59, 59, 99)
   }
   return ticks
 }
 
-/**
- * Generate yearly ticks on the first trading day of January
- * at 9:30. If Jan 1 is on a weekend, skip forward to Monday.
- */
-function generateYearlyTicks(startTS: number, endTS: number) {
+function generateYearlyTicks(startTS: number, endTS: number): number[] {
   const ticks: number[] = []
   let c = new Date(startTS)
-
-  // Move c to Jan 1, 9:30 of the same year or the next if < startTS
-  c = new Date(c.getFullYear(), 0, 1, 9, 30, 0, 0)
+  c = new Date(Date.UTC(c.getUTCFullYear(), 0, 1, 9, 30, 0, 0))
   if (c.getTime() < startTS) {
-    // Next year
-    c.setFullYear(c.getFullYear() + 1)
+    c.setUTCFullYear(c.getUTCFullYear() + 1)
   }
   while (!isTradingDay(c)) {
-    c.setDate(c.getDate() + 1)
+    c.setUTCDate(c.getUTCDate() + 1)
+    c.setUTCHours(9, 30, 0, 0)
   }
-  c.setHours(9, 30, 0, 0)
-
   while (c.getTime() <= endTS) {
     ticks.push(c.getTime())
-    c.setFullYear(c.getFullYear() + 1, 0, 1)
-    c.setHours(9, 30, 0, 0)
+    c.setUTCFullYear(c.getUTCFullYear() + 1, 0, 1)
+    c.setUTCHours(9, 30, 0, 0)
     while (!isTradingDay(c)) {
-      c.setDate(c.getDate() + 1)
+      c.setUTCDate(c.getUTCDate() + 1)
+      c.setUTCHours(9, 30, 0, 0)
     }
-    c.setHours(9, 30, 0, 0)
   }
-
   return ticks
+}
+
+// ---------------------------------------------
+// FINAL TICKS-Generierung: Duplikate anhand formatierten Labels entfernen
+function getFinalTicks(rawTicks: number[], reference: Date): number[] {
+  const tickMap = new Map<string, number>()
+  rawTicks.forEach((tick) => {
+    const label = finalTickFormatter(tick)
+    if (!tickMap.has(label)) {
+      tickMap.set(label, tick)
+    }
+  })
+  return Array.from(tickMap.values()).sort((a, b) => a - b)
 }
 
 // ---------------------------------------------
@@ -433,77 +386,59 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
   const [open, setOpen] = React.useState(false)
   const [selectedStock, setSelectedStock] = React.useState("GOOGL")
 
-  // Schritt 1: Einmalige, sortierte Datumseinträge aus chartData (ohne Uhrzeit)
-  const uniqueDateStrings = [
-    ...new Set(chartData.map((item) => item.date.split("T")[0])),
-  ];
-  console.log(uniqueDateStrings)
+  // 1) Eindeutige Datumswerte (UTC) extrahieren
+  const uniqueDateStrings = [...new Set(chartData.map((item) => item.date.split("T")[0]))]
   const sortedUniqueDates = uniqueDateStrings
     .map((d) => new Date(d))
-    .sort((a, b) => a - b);
+    .sort((a, b) => a.getTime() - b.getTime())
 
-  // Das letzte (aktuellste) eindeutige Datum
-  const lastUniqueDate = sortedUniqueDates[sortedUniqueDates.length - 1];
+  const lastUniqueDate = sortedUniqueDates[sortedUniqueDates.length - 1]
 
-  // Für "5d" wollen wir die letzten 5 eindeutigen Datumseinträge als Strings (z.B. "2023-05-12")
-  let allowedDateStrings = null;
+  // Für "5d": letzten 5 Tage
+  let allowedDateStrings: Set<string> | null = null
   if (timeRange === "5d") {
     allowedDateStrings = new Set(
-      sortedUniqueDates
-        .slice(-5)
-        .map((d) => d.toISOString().split("T")[0])
-    );
+      sortedUniqueDates.slice(-5).map((d) => d.toISOString().split("T")[0])
+    )
   }
 
+  // 2) Daten filtern
   const filteredData = chartData.filter((item) => {
-    // Filtere zunächst das gewünschte Stock-Symbol
-    if (item.stock !== selectedStock) return false;
+    if (item.stock !== selectedStock) return false
 
-    // Hole den Datumsteil (z.B. "2023-05-12") aus dem Timestamp
-    const itemDateString = item.date.split("T")[0];
-    const itemDate = new Date(itemDateString);
+    const itemDateString = item.date.split("T")[0]
+    const itemDate = new Date(itemDateString)
 
     if (timeRange === "1d") {
-      // Nur Datensätze des letzten Tages (ohne Uhrzeit) berücksichtigen
-      const lastDateString = lastUniqueDate.toISOString().split("T")[0];
-      if (itemDateString !== lastDateString) return false;
-
-      // Zusätzlich: Handelszeiten filtern (zwischen 9:30 und 16:00)
-      const dateObj = new Date(item.date);
-      const hours = dateObj.getHours();
-      const minutes = dateObj.getMinutes();
-      const timeInMinutes = hours * 60 + minutes;
-      // 9:30 -> 570 Minuten, 16:00 -> 960 Minuten
-      return timeInMinutes >= 570 && timeInMinutes <= 960;
+      const lastDateString = lastUniqueDate.toISOString().split("T")[0]
+      if (itemDateString !== lastDateString) return false
+      const dateObj = new Date(item.date)
+      const hours = dateObj.getUTCHours()
+      const minutes = dateObj.getUTCMinutes()
+      const timeInMinutes = hours * 60 + minutes
+      return timeInMinutes >= 570 && timeInMinutes <= 960
     } else if (timeRange === "5d") {
-      // Nur Datensätze, deren Datum in den letzten 5 eindeutigen Tagen liegt
-      return allowedDateStrings.has(itemDateString);
+      return allowedDateStrings?.has(itemDateString)
     } else if (timeRange === "1m") {
-      // Alle Datensätze von (letztes Datum - 1 Monat) bis zum letzten Datum
-      const oneMonthAgo = new Date(lastUniqueDate);
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-      return itemDate >= oneMonthAgo && itemDate <= lastUniqueDate;
+      const oneMonthAgo = new Date(lastUniqueDate)
+      oneMonthAgo.setUTCMonth(oneMonthAgo.getUTCMonth() - 1)
+      return itemDate >= oneMonthAgo && itemDate <= lastUniqueDate
     } else if (timeRange === "3m") {
-      const threeMonthsAgo = new Date(lastUniqueDate);
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      return itemDate >= threeMonthsAgo && itemDate <= lastUniqueDate;
+      const threeMonthsAgo = new Date(lastUniqueDate)
+      threeMonthsAgo.setUTCMonth(threeMonthsAgo.getUTCMonth() - 3)
+      return itemDate >= threeMonthsAgo && itemDate <= lastUniqueDate
     } else if (timeRange === "1y") {
-      const oneYearAgo = new Date(lastUniqueDate);
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      return itemDate >= oneYearAgo && itemDate <= lastUniqueDate;
+      const oneYearAgo = new Date(lastUniqueDate)
+      oneYearAgo.setUTCFullYear(oneYearAgo.getUTCFullYear() - 1)
+      return itemDate >= oneYearAgo && itemDate <= lastUniqueDate
     } else if (timeRange === "allTime") {
-      // Keine Filterung nach Datum
-      return true;
+      return true
     }
+    return false
+  })
 
-    return false;
-  });
-
-  console.log(filteredData)
-
-
-  // 2) Aggregation
-  let aggregatedData
+  // 3) Aggregation
+  let aggregatedData: { date: number; value: number }[]
   if (timeRange === "5d") {
     aggregatedData = aggregateDataHourCustom(filteredData)
   } else if (timeRange === "1m") {
@@ -514,12 +449,12 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
     aggregatedData = filteredData
   }
 
-  // 3) Decide color
+  // 4) Farbwahl
   const firstValue = aggregatedData.length ? aggregatedData[0].value : 0
   const lastValue = aggregatedData.length ? aggregatedData[aggregatedData.length - 1].value : 0
   const gradientColor = lastValue >= firstValue ? "green" : "red"
 
-  // 4) Build compressed data
+  // 5) Build compressedData
   let compressedData: { x: number; value: number; realDate: number }[] = []
   if (aggregatedData.length) {
     const refDate = new Date(aggregatedData[0].date)
@@ -536,7 +471,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
   const dataMinOffset = compressedData.length ? compressedData[0].x : 0
   const dataMaxOffset = compressedData.length ? compressedData[compressedData.length - 1].x : 0
 
-  // 5) Ticks
+  // 6) Ticks
   const realMin = aggregatedData[0]?.date ?? 0
   const realMax = aggregatedData[aggregatedData.length - 1]?.date ?? 0
 
@@ -546,13 +481,15 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
 
   let realTicks: number[] | undefined
   if (timeRange === "1d") {
-      const todayStart = new Date(realMin)
-      todayStart.setHours(9, 30, 0, 0) // Start at 9:30 AM0, 0, 0) // Start at 9:30 AM
-      const todayEnd = new Date(realMax)
-      todayEnd.setHours(16, 0, 0, 0) // End at 4:00 PM
-      realTicks = generateHourlyTicks(todayStart.getTime(), todayEnd.getTime())
-  } else if (timeRange === "5d" || timeRange === "1m") {
+    const todayStart = new Date(realMin)
+    todayStart.setUTCHours(9, 30, 0, 0)
+    const todayEnd = new Date(realMax)
+    todayEnd.setUTCHours(16, 0, 0, 0)
+    realTicks = generateHourlyTicks(todayStart.getTime(), todayEnd.getTime())
+  } else if (timeRange === "5d") {
     realTicks = generateDailyTicks(realMin, realMax)
+  } else if (timeRange === "1m") {
+    realTicks = generateWeeklyTicks(realMin, realMax)
   } else if (timeRange === "3m" || timeRange === "1y") {
     realTicks = generateMonthlyTicks(realMin, realMax)
   } else if (timeRange === "allTime") {
@@ -562,21 +499,44 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
   let finalTicks: number[] | undefined
   if (realTicks && aggregatedData.length) {
     const refDate = new Date(aggregatedData[0].date)
-    finalTicks = compressTicks(realTicks, refDate)
+    const rawTicks = compressTicks(realTicks, refDate)
+    // Filtere Duplikate anhand der von finalTickFormatter erzeugten Labels
+    const tickMap = new Map<string, number>()
+    rawTicks.forEach((tick) => {
+      const label = finalTickFormatter(tick)
+      if (!tickMap.has(label)) {
+        tickMap.set(label, tick)
+      }
+    })
+    finalTicks = Array.from(tickMap.values()).sort((a, b) => a - b)
   }
 
-  // 6) Formatters
+  // 7) Y-Axis Domain
+  const yValues = compressedData.map((item) => item.value)
+  const yMin = Math.min(...yValues)
+  const yMax = Math.max(...yValues)
+  const yPadding = (yMax - yMin) * 0.1
+  const domain = [yMin - yPadding, yMax + yPadding]
+
+  // 8) Formatter-Funktionen
   function finalTickFormatter(offsetValue: number) {
     if (!aggregatedData.length) return ""
     const date = expandTradingOffsetToDate(offsetValue, new Date(aggregatedData[0].date))
-    if (timeRange === "1d") {
-      return date.toLocaleTimeString("en-US", { hour: "numeric" })
-    } else if (timeRange === "3m" || timeRange === "1y") {
-      return date.toLocaleDateString("en-US", { month: "short" })
-    } else if (timeRange === "allTime") {
-      return date.toLocaleDateString("en-US", { year: "numeric" })
+    switch (timeRange) {
+      case "1d":
+        return date.toLocaleTimeString("en-US", { hour: "numeric", timeZone: "UTC" })
+      case "5d":
+        return date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+      case "1m":
+        return date.toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })
+      case "3m":
+      case "1y":
+        return date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" })
+      case "allTime":
+        return date.toLocaleDateString("en-US", { year: "numeric", timeZone: "UTC" })
+      default:
+        return date.toLocaleDateString("en-US", { timeZone: "UTC" })
     }
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
   }
 
   function finalLabelFormatter(offsetValue: number) {
@@ -588,64 +548,34 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
         day: "numeric",
         hour: "2-digit",
         minute: "2-digit",
+        timeZone: "UTC",
       })
     }
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: timeRange === "allTime" ? "numeric" : undefined,
+      timeZone: "UTC",
     })
   }
-  const yValues = compressedData.map(item => item.value);
-  const yMin = Math.min(...yValues);
-  const yMax = Math.max(...yValues);
-  const yPadding = (yMax - yMin) * 0.1;
-  const domain = [yMin - yPadding, yMax + yPadding];
 
-  function finalFormatter(
-    value: number,
-    name: string,
-    props: { payload?: { x?: number } }
-  ) {
+  function finalFormatter(value: number, name: string, props: { payload?: { x?: number } }) {
     const offsetValue = props?.payload?.x
     if (!aggregatedData.length || offsetValue == null) return `${value}`
     const date = expandTradingOffsetToDate(offsetValue, new Date(aggregatedData[0].date))
-
-    if (timeRange === "1d") {
+    if (timeRange === "1d" || timeRange === "5d") {
       return (
         <div className="flex">
-          <div
-            className="h-full w-2 mr-1.5"
-            style={{ backgroundColor: gradientColor, borderRadius: "10px" }}
-          ></div>
+          <div className="h-full w-2 mr-1.5" style={{ backgroundColor: gradientColor, borderRadius: "10px" }}></div>
           <div>
             <div className="text-base">{`${value} USD`}</div>
             <div>
-              {date.toLocaleDateString("en-US", {
+              {date.toLocaleString("en-US", {
                 month: "short",
                 day: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
-              })}
-            </div>
-          </div>
-        </div>
-      )
-    } else if (timeRange === "5d") {
-      return (
-        <div className="flex">
-          <div
-            className="h-full w-2 mr-1.5"
-            style={{ backgroundColor: gradientColor, borderRadius: "10px" }}
-          ></div>
-          <div>
-            <div className="text-base">{`${value} USD`}</div>
-            <div>
-              {date.toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
+                timeZone: "UTC",
               })}
             </div>
           </div>
@@ -654,10 +584,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
     }
     return (
       <div className="flex">
-        <div
-          className="h-full w-2 mr-1.5"
-          style={{ backgroundColor: gradientColor, borderRadius: "10px" }}
-        ></div>
+        <div className="h-full w-2 mr-1.5" style={{ backgroundColor: gradientColor, borderRadius: "10px" }}></div>
         <div>
           <div className="text-base">{`${value} USD`}</div>
           <div>
@@ -665,6 +592,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
               month: "short",
               day: "numeric",
               year: "numeric",
+              timeZone: "UTC",
             })}
           </div>
         </div>
@@ -678,22 +606,13 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
         <div className="grid flex-1 gap-1 text-center sm:text-left">
           <CardTitle>Stock Analysis</CardTitle>
           <CardDescription>
-            <div>
-              Overview of the stock’s performance. Select a stock and a time range
-            </div>
-            <div>
-            and hover over the chart for more detailed information.
-            </div>
+            <div>Overview of the stock’s performance. Select a stock and a time range</div>
+            <div>and hover over the chart for more detailed information.</div>
           </CardDescription>
         </div>
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-[200px] justify-between"
-            >
+            <Button variant="outline" role="combobox" aria-expanded={open} className="w-[200px] justify-between">
               {selectedStock
                 ? stocks.find((stock) => stock.value === selectedStock)?.label
                 : "Select stock..."}
@@ -717,10 +636,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
                     >
                       {stock.label}
                       <Check
-                        className={cn(
-                          "ml-auto",
-                          selectedStock === stock.value ? "opacity-100" : "opacity-0"
-                        )}
+                        className={cn("ml-auto", selectedStock === stock.value ? "opacity-100" : "opacity-0")}
                       />
                     </CommandItem>
                   ))}
@@ -763,12 +679,11 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
               tickFormatter={finalTickFormatter}
             />
             <YAxis
-            domain={domain}
+              domain={domain}
               tickFormatter={(value) => Number(value).toFixed(2)}
-              tick={{
-                style: { whiteSpace: "nowrap" }, // Prevent multi-line wrapping
-              }}
-            /><ChartTooltip
+              tick={{ style: { whiteSpace: "nowrap" } }}
+            />
+            <ChartTooltip
               cursor={false}
               content={
                 <ChartTooltipContent
@@ -778,12 +693,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
                 />
               }
             />
-            <Area
-              dataKey="value"
-              type="linear"
-              stroke={gradientColor}
-              fill="url(#fillValue)"
-            />
+            <Area dataKey="value" type="linear" stroke={gradientColor} fill="url(#fillValue)" />
           </AreaChart>
         </ChartContainer>
       </CardContent>

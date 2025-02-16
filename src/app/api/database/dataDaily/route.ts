@@ -45,51 +45,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 3) Beispiel: Stündliche Daten (5 Tage) – falls ebenfalls sehr groß, analoges Chunking
-    const { data: fiveDayData, error: fiveDayError } = await supabase.rpc("get_five_day_hourly", {
-        p_max_date,
-      });
-      if (fiveDayError) {
-        console.error("Error fetching five-day data:", fiveDayError);
-        return NextResponse.json(
-          { error: "An error occurred while fetching five day data" },
-          { status: 500 }
-        );
-      }
-
-    // 4) Beispiel: Ältere Daten (Tagesende) – hast du schon chunking:
-    let olderDayData: any[] = [];
-    let keepFetchingOlder = true;
-    let olderOffset = 0;
-    pageSize = 50;
-
-    while (keepFetchingOlder) {
-      const { data: chunk, error } = await supabase.rpc("get_older_day_end_chunked", {
-        p_max_date,
-        p_offset: olderOffset,
-        p_limit: pageSize,
-      });
-
-      if (error) {
-        console.error("Error fetching chunk of older data:", error);
-        break;
-      }
-
-      if (!chunk?.length) {
-        keepFetchingOlder = false;
-      } else {
-        olderDayData = olderDayData.concat(chunk);
-        olderOffset += pageSize;
-      }
-    }
-
-    // 5) Zusammenfügen
-    let combinedData = [...latestDayData, ...fiveDayData, ...olderDayData /* + ggf. fiveDayData usw. */];
-
     // 6) Sortieren und transformieren
-    combinedData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    latestDayData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
-    const transformedData = combinedData.map((item) => {
+    const transformedData = latestDayData.map((item) => {
       const adjustedDate = new Date(item.timestamp);
       adjustedDate.setHours(adjustedDate.getHours() - 5);
       return {
