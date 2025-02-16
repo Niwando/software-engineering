@@ -15,12 +15,16 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 # ------------------------------
-# Data Processing Helpers (same as before)
+# Data Processing Helpers
 # ------------------------------
 def process_stock_data(df: pd.DataFrame, fill_method: str = 'ffill',
                        filter_market_hours: bool = True, timezone: str = 'US/Eastern') -> pd.DataFrame:
+    # If the index has no timezone, localize it; otherwise, convert to the desired timezone.
     if df.index.tz is None:
         df.index = df.index.tz_localize(timezone)
+    else:
+        df.index = df.index.tz_convert(timezone)
+    
     processed_dfs = []
     for symbol, group in df.groupby('symbol'):
         group = group[~group.index.duplicated(keep='last')]
@@ -46,6 +50,8 @@ def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
     df.index = pd.to_datetime(df.index)
     if df.index.tz is None:
         df.index = df.index.tz_localize('US/Eastern')
+    else:
+        df.index = df.index.tz_convert('US/Eastern')
     df['hour'] = df.index.hour
     df['minute'] = df.index.minute
     df['sin_hour'] = np.sin(2 * np.pi * df['hour'] / 24)
@@ -156,7 +162,7 @@ def fine_tune_all_stocks():
         print(f"Fine-tuning data range for {stock}: {finetune_df.index.min()} to {finetune_df.index.max()}")
 
         # Normalize using an existing scaler.
-        scaler_file = f"lstm/scalers/scaler_minute_{stock}.pkl"
+        scaler_file = f"src/lstm/scalers/scaler_minute_{stock}.pkl"
         if not os.path.exists(scaler_file):
             print(f"Scaler file not found for {stock}. Skipping fine-tuning.")
             continue
@@ -174,7 +180,7 @@ def fine_tune_all_stocks():
         train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
         # Load pre-trained model.
-        model_file = f"lstm/models/trained_model_{stock}.pth"
+        model_file = f"src/lstm/models/trained_model_{stock}.pth"
         if not os.path.exists(model_file):
             print(f"Pre-trained model file not found for {stock}. Skipping fine-tuning.")
             continue

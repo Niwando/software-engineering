@@ -54,11 +54,11 @@ def generate_and_insert_predictions():
 
     for symbol in symbols:
         print(f"\n=== Predicting for symbol: {symbol} ===")
-        scaler_path = f"lstm/scalers/scaler_minute_{symbol}.pkl"
+        scaler_path = f"src/lstm/scalers/scaler_minute_{symbol}.pkl"
         if not os.path.exists(scaler_path):
             print(f"Scaler file {scaler_path} not found for {symbol}. Skipping.")
             continue
-        model_file = f"lstm/models/trained_model_{symbol}.pth"
+        model_file = f"src/lstm/models/trained_model_{symbol}.pth"
         if not os.path.exists(model_file):
             print(f"Model file {model_file} not found for {symbol}. Skipping.")
             continue

@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
+import os
 from app.api.alphavantage.fetch import fetch_stock_data_only, insert_fetched_data
 from lstm.finetune import fine_tune_all_stocks
 from lstm.pred import generate_and_insert_predictions
 
 def main():
-    API_KEY = "D3WKQGJTAEZJSVBI"
+    # Umgebungsvariable auslesen
+    API_KEY = os.environ.get("API_KEY")
+    if not API_KEY:
+        raise ValueError("API_KEY ist nicht gesetzt.")
 
     # 1.1 Fetch new data from the API and store it in memory.
     print("Step 1.1: Fetching new data from the API (fetch-only)...")
