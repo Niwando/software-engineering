@@ -1,0 +1,29 @@
+name: Update
+
+on:
+  schedule:
+    - cron: "0 0 * * *"  # UTC: jeden Tag um Mitternacht
+  workflow_dispatch:  # Manuelles Triggern (optional)
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Run Python script
+        run: |
+          python path/to/your_script.py
