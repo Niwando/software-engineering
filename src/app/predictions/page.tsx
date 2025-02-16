@@ -1,6 +1,6 @@
-import { StocksOverview } from "@/src/components/predictions/stocks-overview"
-import { AreaChartInteractive } from "@/src/components/predictions/area-chart-interactive"
-import { MainNav } from "@/src/components/predictions/main-nav"
+import { StocksOverview } from "@/components/predictions/stocks-overview"
+import { AreaChartInteractive } from "@/components/predictions/area-chart-interactive"
+import { MainNav } from "@/components/predictions/main-nav"
 
 // ----------------- RAW DATA GENERATION -----------------
 
@@ -69,8 +69,8 @@ function getOverviewData(
   // Find the maximum timestamp (last data point)
   let maxTimestamp = -Infinity
   for (let i = 0; i < timestamps.length; i++) {
-    if (timestamps[i] > maxTimestamp) {
-      maxTimestamp = timestamps[i]
+    if (timestamps[i]! > maxTimestamp) {
+      maxTimestamp = timestamps[i]!
     }
   }
   const maxDate = new Date(maxTimestamp)
@@ -93,8 +93,8 @@ function getOverviewData(
       .filter((item) => item.stock === stock)
       .sort((a, b) => a.date - b.date)
     if (stockData.length > 0) {
-      const opening = stockData[0].value
-      const closing = stockData[stockData.length - 1].value
+      const opening = stockData[0]!.value
+      const closing = stockData[stockData.length - 1]!.value
       // Calculate performance in percentage ((closing - opening) / opening) * 100
       const performance = ((closing - opening) / opening) * 100
       stockStats[stock] = {
@@ -116,16 +116,18 @@ function getOverviewData(
   overallPerformance = Number(overallPerformance.toFixed(2))
 
   // Calculate overall value (sum of closing values of all stocks)
-  const overallValue = Object.values(stockStats).reduce(
-    (acc, cur) => acc + cur.closingValue,
-    0
-  ).toFixed(2)
+  const overallValue = Number(
+    Object.values(stockStats).reduce((acc, cur) => acc + cur.closingValue, 0).toFixed(2)
+  )
 
   // Determine best and worst performers, including their closing values
   let bestStock = { stock: "", performance: -Infinity, value: 0 }
   let worstStock = { stock: "", performance: Infinity, value: 0 }
   for (const stock in stockStats) {
-    const { performance, closingValue } = stockStats[stock]
+    const stats = stockStats[stock]
+    if (!stats) continue; // Überspringe den Fall, falls stats undefined ist
+    const { performance, closingValue } = stats;
+    
     if (performance > bestStock.performance) {
       bestStock = { stock, performance, value: closingValue }
     }
@@ -137,7 +139,7 @@ function getOverviewData(
   // Build perStockPerformance as a simple mapping from stock to its performance
   const perStockPerformance: Record<string, number> = {}
   for (const stock in stockStats) {
-    perStockPerformance[stock] = stockStats[stock].performance
+    perStockPerformance[stock] = stockStats[stock]!.performance
   }
 
   return {

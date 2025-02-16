@@ -2,10 +2,8 @@
 
 import {
   Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/src/components/ui/card"
+  CardContent
+} from "@/components/ui/card"
 import { ArrowBigUp, ArrowBigDown } from "lucide-react"
 
 export interface OverviewData {

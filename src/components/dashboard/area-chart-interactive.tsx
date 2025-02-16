@@ -7,24 +7,24 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card"
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/src/components/ui/chart"
+} from "@/components/ui/chart"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select"
+} from "@/components/ui/select"
 import { Check, ChevronsUpDown } from "lucide-react"
  
 import { cn } from "@/lib/utils"
-import { Button } from "@/src/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Command,
   CommandEmpty,
@@ -32,12 +32,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/src/components/ui/command"
+} from "@/components/ui/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/src/components/ui/popover"
+} from "@/components/ui/popover"
 
 // Define types for chart data
 interface ChartDataItem {
@@ -299,21 +299,6 @@ function aggregateDataByDayFirst(data: { date: number; value: number }[]) {
   if (firstValue) ag.push(firstValue)
   return ag
 }
-function aggregateDataByHourLast(data: { date: number; value: number }[]) {
-  const ag: { date: number; value: number }[] = []
-  let currentHour: number | null = null
-  let lastValue: { date: number; value: number } | null = null
-  data.forEach((item) => {
-    const hour = new Date(item.date).getHours()
-    if (currentHour === null || hour !== currentHour) {
-      if (lastValue) ag.push(lastValue)
-      currentHour = hour
-    }
-    lastValue = item
-  })
-  if (lastValue) ag.push(lastValue)
-  return ag
-}
 /** lumps 9:31..10:00 => aggregator=10:00, etc. */
 function aggregateDataHourCustom(data: { date: number; value: number }[]) {
   const bucketMap: Record<number, { date: number; value: number }> = {}
@@ -381,7 +366,7 @@ function generateMonthlyTicks(startTS: number, endTS: number) {
   const ticks: number[] = []
 
   // Move c to the "first-of-month at 9:30" on or after startTS
-  let c = new Date(startTS)
+  const c = new Date(startTS)
   c.setDate(1)
   c.setHours(23, 59, 59, 99)
   if (c.getTime() < startTS) {
@@ -476,7 +461,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
     } else if (timeRange === "1y") {
       rangeStartDate.setFullYear(referenceDate.getFullYear() - 1)
     } else if (timeRange === "allTime") {
-      rangeStartDate = new Date(chartData[0].date)
+      rangeStartDate = new Date(chartData[0]!.date)
     }
     rangeStartDate.setHours(9, 30, 0, 0)
     return date >= rangeStartDate
@@ -577,7 +562,11 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
     })
   }
 
-  function finalFormatter(value: number, name: string, props: any) {
+  function finalFormatter(
+    value: number,
+    name: string,
+    props: { payload?: { x?: number } }
+  ) {
     const offsetValue = props?.payload?.x
     if (!aggregatedData.length || offsetValue == null) return `${value}`
     const date = expandTradingOffsetToDate(offsetValue, new Date(aggregatedData[0].date))

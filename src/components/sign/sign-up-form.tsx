@@ -2,24 +2,19 @@
 
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-export function SignUpForm({
-  className,
-  ...props
-}: {
-  className?: string;
-  [key: string]: any;
-}) {
+
+export function SignUpForm({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const [formData, setFormData] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
 

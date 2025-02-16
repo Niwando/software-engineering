@@ -7,37 +7,20 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card"
+} from "@/components/ui/card"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/src/components/ui/chart"
+} from "@/components/ui/chart"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select"
-import { Check, ChevronsUpDown } from "lucide-react"
- 
-import { cn } from "@/lib/utils"
-import { Button } from "@/src/components/ui/button"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/src/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/src/components/ui/popover"
+} from "@/components/ui/select"
 
 // Define types for chart data
 interface ChartDataItem {
@@ -57,49 +40,6 @@ const OFF_HOURS_BETWEEN_CLOSE_AND_NEXT_OPEN = 60
 const MINUTES_PER_TRADING_DAY = 390
 /** One “full” day block => 390 + 60 => 450. */
 const DAY_BLOCK = MINUTES_PER_TRADING_DAY + OFF_HOURS_BETWEEN_CLOSE_AND_NEXT_OPEN
-
-const stocks = [
-  {
-    value: "GOOGL",
-    label: "GOOGL | Alphabet",
-  },
-  {
-    value: "AMZN",
-    label: "AMZN | Amazon",
-  },
-  {
-    value: "AAPL",
-    label: "AAPL | Apple",
-  },
-  {
-    value: "AVGO",
-    label: "AVGO | Broadcom",
-  },
-  {
-    value: "META",
-    label: "META | Meta Platforms",
-  },
-  {
-    value: "MSFT",
-    label: "MSFT | Microsoft",
-  },
-  {
-    value: "NFLX",
-    label: "NFLX | Netflix",
-  },
-  {
-    value: "NVDA",
-    label: "NVDA | Nvidia",
-  },
-  {
-    value: "PYPL",
-    label: "PYPL | PayPal",
-  },
-  {
-    value: "TSLA",
-    label: "TSLA | Tesla",
-  },
-]
 
 /** True if Monday–Friday (skipping Sat=6, Sun=0). */
 function isTradingDay(date: Date) {
@@ -300,21 +240,6 @@ function aggregateDataByDayFirst(data: { date: number; value: number }[]) {
   if (firstValue) ag.push(firstValue)
   return ag
 }
-function aggregateDataByHourLast(data: { date: number; value: number }[]) {
-  const ag: { date: number; value: number }[] = []
-  let currentHour: number | null = null
-  let lastValue: { date: number; value: number } | null = null
-  data.forEach((item) => {
-    const hour = new Date(item.date).getHours()
-    if (currentHour === null || hour !== currentHour) {
-      if (lastValue) ag.push(lastValue)
-      currentHour = hour
-    }
-    lastValue = item
-  })
-  if (lastValue) ag.push(lastValue)
-  return ag
-}
 /** lumps 9:31..10:00 => aggregator=10:00, etc. */
 function aggregateDataHourCustom(data: { date: number; value: number }[]) {
   const bucketMap: Record<number, { date: number; value: number }> = {}
@@ -382,7 +307,7 @@ function generateMonthlyTicks(startTS: number, endTS: number) {
   const ticks: number[] = []
 
   // Move c to the "first-of-month at 9:30" on or after startTS
-  let c = new Date(startTS)
+  const c = new Date(startTS)
   c.setDate(1)
   c.setHours(23, 59, 59, 99)
   if (c.getTime() < startTS) {
@@ -446,8 +371,7 @@ function generateYearlyTicks(startTS: number, endTS: number) {
 // ---------------------------------------------
 export function AreaChartInteractive({ chartData, stockNames }: AreaChartInteractiveProps) {
   const [timeRange, setTimeRange] = React.useState("1d")
-  const [open, setOpen] = React.useState(false)
-  const [selectedStock, setSelectedStock] = React.useState(stockNames)
+  const [selectedStock] = React.useState(stockNames)
 
   // 1) Filter
   const filteredData = chartData.filter((item) => {
@@ -477,7 +401,7 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
     } else if (timeRange === "1y") {
       rangeStartDate.setFullYear(referenceDate.getFullYear() - 1)
     } else if (timeRange === "allTime") {
-      rangeStartDate = new Date(chartData[0].date)
+      rangeStartDate = new Date(chartData[0]!.date)
     }
     rangeStartDate.setHours(9, 30, 0, 0)
     return date >= rangeStartDate
@@ -496,26 +420,24 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
   }
 
   // 3) Decide color
-  const firstValue = aggregatedData.length ? aggregatedData[0].value : 0
-  const lastValue = aggregatedData.length ? aggregatedData[aggregatedData.length - 1].value : 0
   const gradientColor = "rgb(66, 164, 245)"
 
   // 4) Build compressed data
   let compressedData: { x: number; value: number; realDate: number }[] = []
   if (aggregatedData.length) {
-    const refDate = new Date(aggregatedData[0].date)
+    const refDate = new Date(aggregatedData[0]!.date)
     compressedData = aggregatedData.map((item) => {
-      const realDate = new Date(item.date)
+      const realDate = new Date(item!.date)
       const offset = compressDateToTradingOffset(realDate, refDate)
       return {
         x: offset,
-        value: item.value,
-        realDate: item.date,
+        value: item!.value,
+        realDate: item!.date,
       }
     })
   }
-  const dataMinOffset = compressedData.length ? compressedData[0].x : 0
-  const dataMaxOffset = compressedData.length ? compressedData[compressedData.length - 1].x : 0
+  const dataMinOffset = compressedData.length ? compressedData[0]!.x : 0
+  const dataMaxOffset = compressedData.length ? compressedData[compressedData.length - 1]!.x : 0
 
   // 5) Ticks
   const realMin = aggregatedData[0]?.date ?? 0
@@ -542,7 +464,7 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
 
   let finalTicks: number[] | undefined
   if (realTicks && aggregatedData.length) {
-    const refDate = new Date(aggregatedData[0].date)
+    const refDate = new Date(aggregatedData[0]!.date)
     finalTicks = compressTicks(realTicks, refDate)
   }
 
@@ -578,7 +500,11 @@ export function AreaChartInteractive({ chartData, stockNames }: AreaChartInterac
     })
   }
 
-  function finalFormatter(value: number, name: string, props: any) {
+  function finalFormatter(
+    value: number,
+    name: string,
+    props: { payload?: { x?: number } }
+  ) {
     const offsetValue = props?.payload?.x
     if (!aggregatedData.length || offsetValue == null) return `${value}`
     const date = expandTradingOffsetToDate(offsetValue, new Date(aggregatedData[0].date))

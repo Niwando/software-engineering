@@ -1,8 +1,7 @@
 "use client"
 import * as React from "react"
-import { ArchiveX, Command, Settings, ChartNoAxesCombined, Bot, History, User } from "lucide-react"
-import { NavUser } from "@/src/components/sidebar/nav-user"
-import { Label } from "@/src/components/ui/label"
+import { Settings, ChartNoAxesCombined, Bot, History, User } from "lucide-react"
+import { NavUser } from "@/components/sidebar/nav-user"
 import {
   Sidebar,
   SidebarContent,
@@ -10,14 +9,13 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
-  SidebarInput,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
   SidebarTrigger,
-} from "@/src/components/ui/sidebar"
-import { Switch } from "@/src/components/ui/switch"
+} from "@/components/ui/sidebar"
+
 // This is sample data
 const data = {
   user: {
