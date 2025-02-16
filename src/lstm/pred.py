@@ -41,9 +41,9 @@ def generate_and_insert_predictions():
     INPUT_SIZE = len(features_to_normalize)
     HIDDEN_SIZE = 128
     NUM_LAYERS = 1
-    MODEL_FORECAST_HORIZON = 60  
+    MODEL_FORECAST_HORIZON = 60   # model predicts 60 minutes at a time
     TARGET_HORIZON = 390          # chain predictions to cover 390 minutes (full trading day)
-    WINDOW_SIZE = 60              # use 60 minutes of data to predict the next 60 minutes              
+    WINDOW_SIZE = 60              # last 60 minutes as input
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     #  Query the DB for recent data.
@@ -187,4 +187,5 @@ def generate_and_insert_predictions():
                 print(f"Failed to insert prediction batch for {symbol} starting at row {start} after {MAX_RETRIES} retries.")
 
     print("Prediction process complete for all symbols.")
+
 
