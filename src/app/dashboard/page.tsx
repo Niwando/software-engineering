@@ -15,7 +15,7 @@ export default function Page() {
   const fetchStockData = async () => {
     try {
       // Passe den URL-Pfad an deinen Endpunkt an
-      const response = await fetch("/api/database/data");
+      const response = await fetch("/api/database/dataALL");
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
