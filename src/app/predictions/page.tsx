@@ -7,6 +7,7 @@ import { LoadingSpinner } from "@/components/loading-spinner"
 
 
 export default function Page() {
+    // const [uniqueStocks, setStockNames] = useState([]);
   const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -153,6 +154,11 @@ export default function Page() {
       };
     useEffect(() => {
         fetchStockData();
+        // if (data.length > 0) {
+            // const uniqueStocks = Array.from(new Set(data.map(item => item.stock)));
+            // setStockNames(uniqueStocks);
+          // }
+        // console.log("uniqueStocks", uniqueStocks)
       }, []);
     
       console.log("data", data.length)

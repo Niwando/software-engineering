@@ -49,11 +49,8 @@ export async function GET(req: NextRequest) {
     latestDayData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     const transformedData = latestDayData.map((item) => {
-      const adjustedDate = new Date(item.timestamp);
-      adjustedDate.setHours(adjustedDate.getHours() - 5);
       return {
         ...item,
-        timestamp: adjustedDate.toISOString(),
         predicted_close: Number(item.predicted_close).toFixed(2),
       };
     });

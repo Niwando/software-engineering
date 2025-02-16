@@ -607,7 +607,7 @@ export function AreaChartInteractive({ chartData }: AreaChartInteractiveProps) {
           <CardTitle>Stock Analysis</CardTitle>
           <CardDescription>
             <div>Overview of the stock’s performance. Select a stock and a time range</div>
-            <div>and hover over the chart for more detailed information (always UTC).</div>
+            <div>and hover over the chart for more detailed information.</div>
           </CardDescription>
         </div>
         <Popover open={open} onOpenChange={setOpen}>
